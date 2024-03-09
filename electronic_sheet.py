@@ -88,6 +88,8 @@ class Spreadsheet:
         :param cell_name: The name of the cell to retrieve.
         :return: The Cell object if found, None otherwise.
         """
+        if not self.is_valid_cell_name(cell_name):
+            raise ValueError(f"Invalid cell name '{cell_name}'. Cell names must be in the format 'A1', 'B2', etc.")
         if cell_name in self.cells:
             return self.cells[cell_name]
         else:
@@ -99,6 +101,8 @@ class Spreadsheet:
         :param cell_name: The name of the cell to evaluate.
         :return: The evaluated value of the cell or an error message if the cell does not exist.
         """
+        if not self.is_valid_cell_name(cell_name):
+            raise ValueError(f"Invalid cell name '{cell_name}'. Cell names must be in the format 'A1', 'B2', etc.")
         cell = self.get_cell(cell_name)
         if cell:
             try:
@@ -143,6 +147,8 @@ class Spreadsheet:
         :return: The value of the cell.
         :raises ValueError: If the cell is empty, has an invalid value, or does not exist.
         """
+        if not self.is_valid_cell_name(cell_name):
+            raise ValueError(f"Invalid cell name '{cell_name}'. Cell names must be in the format 'A1', 'B2', etc.")
         cell = self.get_cell(cell_name)
         if cell:
             if cell.value is not None:
