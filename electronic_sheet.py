@@ -74,6 +74,9 @@ class Spreadsheet:
         :param formula: An optional formula for the cell.
         If provided, the cell's value will be determined by this formula.
         """
+        if not Cell.is_valid_cell_name(cell_name):
+            raise ValueError(f"Invalid cell name '{cell_name}'."
+                             f"Cell names must be in the format 'A1', 'B2', 'AZ10' etc.")
         cell = Cell(value)
         cell.formula = formula
         self.cells[cell_name] = cell
