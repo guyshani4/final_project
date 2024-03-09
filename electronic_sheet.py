@@ -153,6 +153,23 @@ class Spreadsheet:
         else:
             raise ValueError("Invalid formula format")
 
+    def calculate_average(self, start: str, end: str) -> Any:
+        """
+        Calculates the average value of cells in a specified range, ignoring cells with no value.
+        :param start: The starting cell name of the range.
+        :param end: The ending cell name of the range.
+        :return None if any cell was not found, else,
+        The average value of the cells in the range, ignoring cells without a value.
+        """
+        cell_names = self.get_range_cells(start, end)
+        #Retrieve values and filtering out cells that do not exist or have None as their value.
+        values = [self.get_cell_value(name) for name in cell_names if self.get_cell_value(name) is not None]
+        #If there are no values after filtering, return None.
+        if not values:
+            return
+        #Calculate the average from the list of values that were not None.
+        return sum(values) / len(values)
+
     def get_raw_value(self, cell_name: str) -> Any:
         """
         Retrieves the raw value of a cell without evaluating its formula.
@@ -221,6 +238,7 @@ class Spreadsheet:
                 cell_name = f"{col_letter}{row}"
                 cells.append(cell_name)
         return cells
+
     def save_as(self, filename: str) -> None:
         """
         Saves the current state of the spreadsheet to a file in JSON format.
