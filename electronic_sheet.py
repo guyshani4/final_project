@@ -62,7 +62,7 @@ class Spreadsheet:
             return False
 
         # Check if concatenating the two parts gives the original string
-        if (letter_part + number_part) == cell_name:
+        if "".join(letter_part + number_part) == cell_name:
             return True
 
         return False
@@ -210,7 +210,7 @@ class Spreadsheet:
         :param end: The ending cell name of the range.
         :return: float: the minimum value in the range.
         """
-        cell_names = self.get_range_cells(start, end)
+        cell_names = self.cells_values_list(start, end)
         try:
             return min(cell_names)
         except Exception as err:
@@ -225,7 +225,7 @@ class Spreadsheet:
         :param end: The ending cell name of the range.
         :return: float: the maximum value in the range.
         """
-        cell_names = self.get_range_cells(start, end)
+        cell_names = self.cells_values_list(start, end)
         try:
             return max(cell_names)
         except Exception as err:
@@ -334,20 +334,20 @@ class Spreadsheet:
         :return List[str]: A list of cell names within the specified range.
         """
         # Separates the letters and digits in each cell
-        start_col = str([letter for letter in start if letter.isalpha()])
-        end_col = str([letter for letter in end if letter.isalpha()])
-        start_row = str([digit for digit in start if digit.isdigit()])
-        end_row = str([digit for digit in end if digit.isdigit()])
+        start_col = [letter for letter in start if letter.isalpha()]
+        end_col = [letter for letter in end if letter.isalpha()]
+        start_row = [digit for digit in start if digit.isdigit()]
+        end_row = [digit for digit in end if digit.isdigit()]
         # Translates the col index into an integer
-        start_col_index = self.col_letter_to_index(start_col)
-        end_col_index = self.col_letter_to_index(end_col)
+        start_col_index = self.col_letter_to_index(start_col[0])
+        end_col_index = self.col_letter_to_index(end_col[0])
 
         if start_col_index > end_col_index or start_row > end_row:
             raise ValueError(f"Invalid cells range. '{end}' comes after '{start}")
         # Creates the list of all the indexes as strings.
         cells = []
         for col in range(start_col_index, end_col_index + 1):
-            for row in range(int(start_row), int(end_row) + 1):
+            for row in range(int(int(start_row[0])), int(int(end_row[0])) + 1):
                 col_letter = self.col_index_to_letter(col)
                 cell_name = f"{col_letter}{row}"
                 cells.append(cell_name)
@@ -372,3 +372,5 @@ class Spreadsheet:
             loaded_dict = json.load(f)
         for name, data in loaded_dict.items():
             self.set_cell(name, data['value'], data['formula'])
+
+
