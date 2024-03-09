@@ -117,22 +117,22 @@ class Spreadsheet:
             raise ValueError(f"Cell {cell_name} does not exist.")
 
 
-    def save_spreadsheet(self, filename):
+    def save_as(self, filename):
         """
         Saves the current state of the spreadsheet to a file in JSON format.
         :param filename: The name of the file to save the spreadsheet to.
         """
-        savable_data = {name: {'value': cell.value, 'formula': cell.formula} for name, cell in self.cells.items()}
+        data_as_dict = {name: {'value': cell.value, 'formula': cell.formula} for name, cell in self.cells.items()}
         with open(filename, 'w') as f:
-            json.dump(savable_data, f)
+            json.dump(data_as_dict, f)
 
     def load(self, filename):
         """
         Loads a spreadsheet from a file saved in JSON format.
-
+        it loads the json to a Spreadsheet file again, initializing every cell again.
         :param filename: The name of the file to load the spreadsheet from.
         """
         with open(filename, 'r') as f:
-            loaded_data = json.load(f)
-        for name, data in loaded_data.items():
+            loaded_dict = json.load(f)
+        for name, data in loaded_dict.items():
             self.set_cell(name, data['value'], data['formula'])
