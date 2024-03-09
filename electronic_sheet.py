@@ -25,7 +25,9 @@ class Cell:
         return self.value
 
 class Spreadsheet:
-    """Represents a spreadsheet, capable of storing and managing cells."""
+    """
+    Represents a spreadsheet, similar to an Excel page.
+    """
     def __init__(self):
         """
         Initializes a new Spreadsheet instance with an empty dictionary of cells.
@@ -35,11 +37,10 @@ class Spreadsheet:
     def set_cell(self, cell_name, value, formula=None):
         """
         Sets or updates a cell's value and/or formula.
-
-        :param cell_name: A string identifier for the cell (e.g., "A1").
+        :param cell_name: A string identifier for the cell (for example: "A1").
         :param value: The value to set in the cell.
-        :param formula: An optional formula for the cell. If provided, the cell's value
-                        will be determined by this formula.
+        :param formula: An optional formula for the cell.
+        If provided, the cell's value will be determined by this formula.
         """
         cell = Cell(value)
         cell.formula = formula
@@ -47,8 +48,7 @@ class Spreadsheet:
 
     def get_cell(self, cell_name):
         """
-        Custom method to safely retrieve a Cell object from the cells dictionary.
-
+        retrieves a Cell object from the cell's dictionary.
         :param cell_name: The name of the cell to retrieve.
         :return: The Cell object if found, None otherwise.
         """
@@ -60,16 +60,15 @@ class Spreadsheet:
     def get_cell_value(self, cell_name):
         """
         Retrieves the evaluated value of a cell.
-
         :param cell_name: The name of the cell to evaluate.
         :return: The evaluated value of the cell or an error message if the cell does not exist.
         """
-        cell = self.cells.get(cell_name)
+        cell = self.get_cell(cell_name)
         if cell:
             try:
                 return cell.evaluate(self)
-            except Exception as e:
-                return f"Error: {str(e)}"
+            except Exception as err:
+                return f"Error: {str(err)}"
         return "Cell does not exist"
 
     def evaluate_formula(self, formula):
@@ -118,10 +117,9 @@ class Spreadsheet:
             raise ValueError(f"Cell {cell_name} does not exist.")
 
 
-    def save(self, filename):
+    def save_spreadsheet(self, filename):
         """
         Saves the current state of the spreadsheet to a file in JSON format.
-
         :param filename: The name of the file to save the spreadsheet to.
         """
         savable_data = {name: {'value': cell.value, 'formula': cell.formula} for name, cell in self.cells.items()}
