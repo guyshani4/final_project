@@ -124,8 +124,10 @@ class Spreadsheet:
         if formula.startswith("AVERAGE"):
             try:
                 cells = self.valid_avg_index(formula)
-                return self.calculate_average(cells)
-
+                return self.calculate_average(cells[0], cells[1])
+            except Exception as err:
+                print(f"Error: {str(err)}")
+                return
         parts = formula.split()
         if len(parts) == 3:
             side1, operation, side2 = parts
