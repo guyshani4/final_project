@@ -62,7 +62,7 @@ class Spreadsheet:
             return False
 
         # Check if concatenating the two parts gives the original string
-        if ''.join(letter_part + number_part) == cell_name:
+        if (letter_part + number_part) == cell_name:
             return True
 
         return False
@@ -113,6 +113,7 @@ class Spreadsheet:
         print("Cell does not exist")
         return
 
+
     def evaluate_formula(self, formula: str) -> Any:
         """
         calculates a given formula represented as a string.
@@ -121,6 +122,9 @@ class Spreadsheet:
         :raises ValueError: If the formula is invalid or contains unknown operations.
         """
         if formula.startswith("AVERAGE"):
+            try:
+                cells = self.valid_avg_index(formula)
+                return self.calculate_average(cells)
 
         parts = formula.split()
         if len(parts) == 3:
@@ -152,6 +156,16 @@ class Spreadsheet:
                 raise ValueError("Unsupported operation")
         else:
             raise ValueError("Invalid formula format")
+
+    def valid_avg_index(self, formula: str) -> Tuple[str, str]:
+        formula = formula.replace("AVERAGE(", "")
+        formula = formula.replace(")", "")
+        cell_list = formula.split(":")
+        if len(cell_list) != 2:
+            raise ValueError("average can not be calculated")
+        return cell_list[0], cell_list[1]
+
+
 
     def calculate_average(self, start: str, end: str) -> Any:
         """
