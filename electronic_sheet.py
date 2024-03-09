@@ -1,6 +1,6 @@
 import json
 from typing import *
-
+LETTERS_NUM = 26
 class Cell:
     """
     Represents a single cell in a Spreadsheet.
@@ -170,24 +170,53 @@ class Spreadsheet:
                 raise ValueError(f"Cell {cell_name} is empty or has an invalid value.")
         else:
             raise ValueError(f"Cell {cell_name} does not exist.")
+
+    def col_letter_to_index(self, col: str) -> int:
+        """
+        Converts a column letter (LIKE "A") to an integer index (for example, "A" -> "0").
+        """
+        index = 0
+        for char in col:
+            index = index * LETTERS_NUM + (ord(char.upper()) - ord('A') + 1)
+        return index - 1
+
+    def col_index_to_letter(self, index: int) -> str:
+        """
+        Converts an integer index to a column letter (for example, 0 -> "A").
+        """
+        col = ''
+        while index >= 0:
+            col = chr(index % LETTERS_NUM + ord('A')) + col
+            index = index // LETTERS_NUM - 1
+        return col
+
     def get_range_cells(self, start: str, end: str) -> List[str]:
         """
-        creates a list with all the cells that in the range
-        :param start: the first cell in the range
-        :param end: the last cell in the range
-        :return: a list  of strings with all the cells that in the range
+        Generates a list of cell names in a range that can span multiple columns and rows.
+
+        Parameters:
+        - start (str): The starting cell name of the range.
+        - end (str): The ending cell name of the range.
+
+        Returns:
+        - List[str]: A list of cell names within the specified range.
         """
-        if not self.is_valid_cell_name(start):
-            raise ValueError(f"Cell {start} is an invalid cell format.")
-        if not self.is_valid_cell_name(end):
-            raise ValueError(f"Cell {end} is an invalid cell format.")
-        start_column = [letter for letter in start if letter.isalpha()]
-        end_column = [letter for letter in end if letter.isalpha()]
-        start_row = int(start[1:])  # Assuming cell names are like "A1", this gets the row number.
-        end_row = int(end[1:])
+        #seperates the letters and digits in each cell
+        start_col = str([letter for letter in start if letter.isalpha()])
+        end_col = str([letter for letter in end if letter.isalpha()])
+        start_row = str([digit for digit in start if digit.isdigit()])
+        end_row = str([digit for digit in end if digit.isdigit()])
+        #translates the col index into an integer
+        start_col_index = self.col_letter_to_index(start_col)
+        end_col_index = self.col_letter_to_index(end_col)
 
-        return [f"{column}{row}" for row in range(start_row, end_row + 1)]
-
+        cells = []
+        for col in range(start_col_index, end_col_index + 1):
+            for row in range(int(start_row), int(end_row) + 1):
+                col_letter = self.col_index_to_letter(col)
+                cell_name = f"{col_letter}{row}"
+                cells.append(cell_name)
+        return cells
     def save_as(self, filename: str) -> None:
         """
         Saves the current state of the spreadsheet to a file in JSON format.
