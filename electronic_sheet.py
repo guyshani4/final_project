@@ -121,9 +121,18 @@ class Spreadsheet:
         parts = formula.split()
         if len(parts) == 3:
             side1, operation, side2 = parts
-            value1 = self.get_raw_value(side1)
-            value2 = self.get_raw_value(side2)
+            # Try converting the first operand to a number, if it fails, treat it as a cell reference
+            try:
+                value1 = float(side1)
+            except ValueError:
+                value1 = self.get_raw_value(side1)
+            # Repeat the process for the second operand
+            try:
+                value2 = float(side2)
+            except ValueError:
+                value2 = self.get_raw_value(side2)
 
+            # checks the operation
             if operation == '+':
                 return value1 + value2
             elif operation == '-':
