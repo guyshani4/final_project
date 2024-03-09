@@ -25,7 +25,18 @@ class Cell:
             return spreadsheet.evaluate_formula(self.formula)
         return self.value
 
-    def is_valid_cell_name(cell_name: str) -> bool:
+
+class Spreadsheet:
+    """
+    Represents a spreadsheet page, similar to an Excel page.
+    """
+    def __init__(self) -> None:
+        """
+        Initializes a new Spreadsheet instance with an empty dictionary of cells.
+        """
+        self.cells = {}
+
+    def is_valid_cell_name(self, cell_name: str) -> bool:
         """
         Check if the provided cell name follows the Excel format.
 
@@ -56,16 +67,6 @@ class Cell:
 
         return False
 
-class Spreadsheet:
-    """
-    Represents a spreadsheet page, similar to an Excel page.
-    """
-    def __init__(self) -> None:
-        """
-        Initializes a new Spreadsheet instance with an empty dictionary of cells.
-        """
-        self.cells = {}
-
     def set_cell(self, cell_name: str, value: Optional[Any] = None, formula: Optional[str] = None) -> None:
         """
         Sets or updates a cell's value and/or formula.
@@ -74,7 +75,7 @@ class Spreadsheet:
         :param formula: An optional formula for the cell.
         If provided, the cell's value will be determined by this formula.
         """
-        if not Cell.is_valid_cell_name(cell_name):
+        if not self.is_valid_cell_name(cell_name):
             raise ValueError(f"Invalid cell name '{cell_name}'."
                              f"Cell names must be in the format 'A1', 'B2', 'AZ10' etc.")
         cell = Cell(value)
