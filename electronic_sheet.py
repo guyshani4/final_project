@@ -113,21 +113,13 @@ class Spreadsheet:
         print("Cell does not exist")
         return
 
-
-    def evaluate_formula(self, formula: str) -> Any:
+    def regular_formula(self, formula: str) -> Any:
         """
-        calculates a given formula represented as a string.
-        :param formula: A string formula, for example: "A1 + B1".
-        :return: The result of the formula calculation.
-        :raises ValueError: If the formula is invalid or contains unknown operations.
+        regular formula stands for formulas with one/two cells and regular operation (*,/,+,-)
+        for example: "A1/A2", "A3*4"
+        :param formula: a string with the formula
+        :return: the answer of the formula. if the formula doesnt meet the string requirements, None.
         """
-        if formula.startswith("AVERAGE"):
-            try:
-                cells = self.valid_avg_index(formula)
-                return self.calculate_average(cells[0], cells[1])
-            except Exception as err:
-                print(f"Error: {str(err)}")
-                return
         parts = formula.split()
         if len(parts) == 3:
             side1, operation, side2 = parts
@@ -159,15 +151,89 @@ class Spreadsheet:
         else:
             raise ValueError("Invalid formula format")
 
-    def valid_avg_index(self, formula: str) -> Tuple[str, str]:
-        formula = formula.replace("AVERAGE(", "")
+
+    def evaluate_formula(self, formula: str) -> Any:
+        """
+        calculates a given formula represented as a string.
+        :param formula: A string formula, for example: "A1 + B1".
+        :return: The result of the formula calculation.
+        :raises ValueError: If the formula is invalid or contains unknown operations.
+        """
+        if formula.startswith("AVERAGE"):
+            try:
+                cells = self.valid_cells_index(formula)
+                return self.calculate_average(cells[0], cells[1])
+            except Exception as err:
+                print(f"Error: {str(err)}")
+                return
+        if formula.startswith("SUM"):
+            try:
+                cells = self.valid_cells_index(formula)
+                return self.calculate_sum(cells[0], cells[1])
+            except Exception as err:
+                print(f"Error: {str(err)}")
+                return
+        if formula.startswith("MIN"):
+            try:
+                cells = self.valid_cells_index(formula)
+                return self.find_min(cells[0], cells[1])
+            except Exception as err:
+                print(f"Error: {str(err)}")
+                return
+        if formula.startswith("MAX"):
+            try:
+                cells = self.valid_cells_index(formula)
+                return self.find_max(cells[0], cells[1])
+            except Exception as err:
+                print(f"Error: {str(err)}")
+                return
+        return self.regular_formula(formula)
+
+
+
+    def cells_values_list(self, start: str, end: str) -> Any:
+        cell_names = self.get_range_cells(start, end)
+        # Retrieve values and filtering out cells that do not exist or have None as their value.
+        values = [self.get_cell_value(name) for name in cell_names if self.get_cell_value(name) is not None]
+        # If there are no values after filtering, return None.
+        return values
+    def find_min(self, start: str, end: str) -> Any:
+        cell_names = self.get_range_cells(start, end)
+        return min(cell_names)
+
+    def find_max(self, start: str, end: str) -> Any:
+        cell_names = self.get_range_cells(start, end)
+        return max(cell_names)
+
+    def calculate_sum(self, start: str, end: str) -> Any:
+        """
+        calculates the sum of cells values in a specific range that was given
+        :param start: The starting cell name of the range.
+        :param end: The ending cell name of the range.
+        :return: float: the sum of all the values in the range.
+        """
+        values_list = self.cells_values_list(start, end)
+        if values_list:
+            return sum(values_list)
+        return
+
+    def valid_cells_index(self, formula: str) -> Tuple[str, str]:
+        """
+        gets a string with specific formula.
+        Retrieves the specific 2 cells that in the formula.
+        :param formula: a string of an operation and 2 specific cells to check the range between them.
+        :return: the 2 cells that in the formula.
+        for example:  ("AVERAGE(A1:B2)" -> ("A1", "B2")
+        """
+        for index in range(len(formula)):
+            if formula[index] == "(":
+                formula = formula[index+1:]
+                break
         formula = formula.replace(")", "")
         cell_list = formula.split(":")
         if len(cell_list) != 2:
-            raise ValueError("average can not be calculated")
+            raise ValueError("index can not be calculated")
         return cell_list[0], cell_list[1]
-
-
 
     def calculate_average(self, start: str, end: str) -> Any:
         """
@@ -177,14 +243,10 @@ class Spreadsheet:
         :return None if any cell was not found, else,
         The average value of the cells in the range, ignoring cells without a value.
         """
-        cell_names = self.get_range_cells(start, end)
-        #Retrieve values and filtering out cells that do not exist or have None as their value.
-        values = [self.get_cell_value(name) for name in cell_names if self.get_cell_value(name) is not None]
-        #If there are no values after filtering, return None.
-        if not values:
-            return
-        #Calculate the average from the list of values that were not None.
-        return sum(values) / len(values)
+        values_list = self.cells_values_list(start, end)
+        if values_list:
+            return sum(values_list)/len(values_list)
+        return
 
     def get_raw_value(self, cell_name: str) -> Any:
         """
@@ -238,15 +300,18 @@ class Spreadsheet:
         :param end: The ending cell name of the range.
         :return List[str]: A list of cell names within the specified range.
         """
-        #seperates the letters and digits in each cell
+        # Separates the letters and digits in each cell
         start_col = str([letter for letter in start if letter.isalpha()])
         end_col = str([letter for letter in end if letter.isalpha()])
         start_row = str([digit for digit in start if digit.isdigit()])
         end_row = str([digit for digit in end if digit.isdigit()])
-        #translates the col index into an integer
+        # Translates the col index into an integer
         start_col_index = self.col_letter_to_index(start_col)
         end_col_index = self.col_letter_to_index(end_col)
-        #creates the list of all the indexes as strings.
+
+        if start_col_index > end_col_index or start_row > end_row:
+            raise ValueError(f"Invalid cells range. '{end}' comes after '{start}")
+        # Creates the list of all the indexes as strings.
         cells = []
         for col in range(start_col_index, end_col_index + 1):
             for row in range(int(start_row), int(end_row) + 1):
