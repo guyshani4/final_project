@@ -192,18 +192,45 @@ class Spreadsheet:
 
 
     def cells_values_list(self, start: str, end: str) -> Any:
+        """
+        Retrieves a list with all the values in a given range
+         :param start: The starting cell name of the range.
+        :param end: The ending cell name of the range.
+        :return: list of values of all the cells in the range
+        """
         cell_names = self.get_range_cells(start, end)
         # Retrieve values and filtering out cells that do not exist or have None as their value.
         values = [self.get_cell_value(name) for name in cell_names if self.get_cell_value(name) is not None]
         # If there are no values after filtering, return None.
         return values
     def find_min(self, start: str, end: str) -> Any:
+        """
+        finds the minimum cell value in a specific range that was given
+        :param start: The starting cell name of the range.
+        :param end: The ending cell name of the range.
+        :return: float: the minimum value in the range.
+        """
         cell_names = self.get_range_cells(start, end)
-        return min(cell_names)
+        try:
+            return min(cell_names)
+        except Exception as err:
+            print(f"Error: {str(err)}")
+            return
+
 
     def find_max(self, start: str, end: str) -> Any:
+        """
+        finds the maximum cell value in a specific range that was given
+        :param start: The starting cell name of the range.
+        :param end: The ending cell name of the range.
+        :return: float: the maximum value in the range.
+        """
         cell_names = self.get_range_cells(start, end)
-        return max(cell_names)
+        try:
+            return max(cell_names)
+        except Exception as err:
+            print(f"Error: {str(err)}")
+            return
 
     def calculate_sum(self, start: str, end: str) -> Any:
         """
@@ -214,7 +241,10 @@ class Spreadsheet:
         """
         values_list = self.cells_values_list(start, end)
         if values_list:
-            return sum(values_list)
+            try:
+                return sum(values_list)
+            except Exception as err:
+                return f"Error: {str(err)}"
         return
 
     def valid_cells_index(self, formula: str) -> Tuple[str, str]:
@@ -245,7 +275,10 @@ class Spreadsheet:
         """
         values_list = self.cells_values_list(start, end)
         if values_list:
-            return sum(values_list)/len(values_list)
+            try:
+                return sum(values_list)/len(values_list)
+            except Exception as err:
+                print(f"Error: {str(err)}")
         return
 
     def get_raw_value(self, cell_name: str) -> Any:
