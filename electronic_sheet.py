@@ -167,6 +167,22 @@ class Spreadsheet:
         else:
             raise ValueError(f"Cell {cell_name} does not exist.")
 
+    def split_cell_name(self, cell_name: str) -> (str, int):
+        """
+        Splits a cell name into its column and row components.
+
+        Parameters:
+        - cell_name (str): The cell name to split, e.g., "A1", "B24".
+
+        Returns:
+        - Tuple[str, int]: A tuple containing the column part as a string and the row part as an integer.
+        """
+        if self.is_valid_cell_name(cell_name):
+            column_part = ''.join([char for char in cell_name if char.isalpha()])
+            row_part = ''.join([char for char in cell_name if char.isdigit()])
+            return column_part, int(row_part)
+        return
+
     def save_as(self, filename: str) -> None:
         """
         Saves the current state of the spreadsheet to a file in JSON format.
