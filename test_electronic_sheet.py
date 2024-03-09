@@ -78,6 +78,7 @@ def test_evaluate_formula_functions():
     assert spreadsheet.evaluate_formula("MIN(B1:B3)") == 30
     assert spreadsheet.evaluate_formula("MAX(B1:B3)") == 50
 
+
 def test_evaluate_formula_division_by_zero():
     spreadsheet = setup_spreadsheet()
     with pytest.raises(ValueError) as e:
