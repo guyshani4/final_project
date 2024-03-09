@@ -174,6 +174,9 @@ class Spreadsheet:
     def col_letter_to_index(self, col: str) -> int:
         """
         Converts a column letter (LIKE "A") to an integer index (for example, "A" -> "0").
+        for example: "A" -> 0, "B" -> 1, "AA" - 26
+        :param col: a col as a string
+        :return the col's index as integer
         """
         index = 0
         for char in col:
@@ -183,6 +186,9 @@ class Spreadsheet:
     def col_index_to_letter(self, index: int) -> str:
         """
         Converts an integer index to a column letter (for example, 0 -> "A").
+        for example: 0 -> "A", 1 -> "B", 26 - "AA"
+        :param index: the col's index as integer
+        :return the col's string
         """
         col = ''
         while index >= 0:
@@ -192,14 +198,12 @@ class Spreadsheet:
 
     def get_range_cells(self, start: str, end: str) -> List[str]:
         """
-        Generates a list of cell names in a range that can span multiple columns and rows.
+        creates a list of cell names in a range that can span multiple columns and rows.
+        for example: (A1, B2) -> ["A1", "A2", "B1", "B2"]
 
-        Parameters:
-        - start (str): The starting cell name of the range.
-        - end (str): The ending cell name of the range.
-
-        Returns:
-        - List[str]: A list of cell names within the specified range.
+        :param start: The starting cell name of the range.
+        :param end: The ending cell name of the range.
+        :return List[str]: A list of cell names within the specified range.
         """
         #seperates the letters and digits in each cell
         start_col = str([letter for letter in start if letter.isalpha()])
@@ -209,7 +213,7 @@ class Spreadsheet:
         #translates the col index into an integer
         start_col_index = self.col_letter_to_index(start_col)
         end_col_index = self.col_letter_to_index(end_col)
-
+        #creates the list of all the indexes as strings.
         cells = []
         for col in range(start_col_index, end_col_index + 1):
             for row in range(int(start_row), int(end_row) + 1):
