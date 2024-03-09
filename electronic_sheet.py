@@ -108,8 +108,10 @@ class Spreadsheet:
             try:
                 return cell.calculated_value(self)
             except Exception as err:
-                return f"Error: {str(err)}"
-        return "Cell does not exist"
+                print(f"Error: {str(err)}")
+                return
+        print("Cell does not exist")
+        return
 
     def evaluate_formula(self, formula: str) -> Any:
         """
@@ -118,6 +120,8 @@ class Spreadsheet:
         :return: The result of the formula calculation.
         :raises ValueError: If the formula is invalid or contains unknown operations.
         """
+        if formula.startswith("AVERAGE"):
+
         parts = formula.split()
         if len(parts) == 3:
             side1, operation, side2 = parts
@@ -166,22 +170,23 @@ class Spreadsheet:
                 raise ValueError(f"Cell {cell_name} is empty or has an invalid value.")
         else:
             raise ValueError(f"Cell {cell_name} does not exist.")
-
-    def split_cell_name(self, cell_name: str) -> (str, int):
+    def get_range_cells(self, start: str, end: str) -> List[str]:
         """
-        Splits a cell name into its column and row components.
-
-        Parameters:
-        - cell_name (str): The cell name to split, e.g., "A1", "B24".
-
-        Returns:
-        - Tuple[str, int]: A tuple containing the column part as a string and the row part as an integer.
+        creates a list with all the cells that in the range
+        :param start: the first cell in the range
+        :param end: the last cell in the range
+        :return: a list  of strings with all the cells that in the range
         """
-        if self.is_valid_cell_name(cell_name):
-            column_part = ''.join([char for char in cell_name if char.isalpha()])
-            row_part = ''.join([char for char in cell_name if char.isdigit()])
-            return column_part, int(row_part)
-        return
+        if not self.is_valid_cell_name(start):
+            raise ValueError(f"Cell {start} is an invalid cell format.")
+        if not self.is_valid_cell_name(end):
+            raise ValueError(f"Cell {end} is an invalid cell format.")
+        start_column = [letter for letter in start if letter.isalpha()]
+        end_column = [letter for letter in end if letter.isalpha()]
+        start_row = int(start[1:])  # Assuming cell names are like "A1", this gets the row number.
+        end_row = int(end[1:])
+
+        return [f"{column}{row}" for row in range(start_row, end_row + 1)]
 
     def save_as(self, filename: str) -> None:
         """
