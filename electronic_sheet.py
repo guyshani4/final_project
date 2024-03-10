@@ -5,14 +5,14 @@ class Cell:
     """
     Represents a single cell in a Spreadsheet.
     """
-    def __init__(self, value: Optional[Any] = None) -> None:
+    def __init__(self, value: Optional[Any] = None, formula: Optional[str] = None) -> None:
         """
         Initializes a new Cell instance.
         :param value: The initial value of the cell.
         if nothing was inserted as value, None as default.
         """
         self.value = value
-        self.formula = None
+        self.formula = formula
 
     def calculated_value(self, spreadsheet: 'Spreadsheet') -> Any:
         """
@@ -24,6 +24,10 @@ class Cell:
         if self.formula:
             return spreadsheet.evaluate_formula(self.formula)
         return self.value
+
+    def set_value(self, value):
+        self.value = value
+
 
 
 class Spreadsheet:
@@ -93,14 +97,25 @@ class Spreadsheet:
 
     def table_string(self) -> str:
         """
-        the function prints the spreadsheet as a string, with a specific
-        appear that looks like an Excel table.
-        :return: str
+        Generates a string representation of the spreadsheet in a table format.
+        This method creates a visual table where each cell is aligned in columns and rows,
+        similar to a traditional spreadsheet view.
+        Cells without a value or formula are represented by a dash ("-").
+        The representation aims to provide a clear overview of the spreadsheet's contents,
+        making it useful for debugging or displaying the current state of the spreadsheet.
+        example of a print:
+             A          B          C
+        -----------------------------------------
+        1    100        -          -
+        2    -          200        -
+        3    -          -          Hello
+
+        :return str: A string representing the spreadsheet in a structured table format.
         """
         if not self.cells:
             return "The spreadsheet is empty."
 
-        # Identify the max column and row by converting column letters to indices
+        # Identify the max column and row
         max_col_index = 0
         max_row = 0
         for cell_name in self.cells.keys():
@@ -121,8 +136,8 @@ class Spreadsheet:
             for i in range(max_col_index + 1):
                 col_letter = self.col_index_to_letter(i)
                 cell_name = f"{col_letter}{row_num}"
-                cell_value = self.cells.get(cell_name, Cell("-")).value
-                cell_str = f'{str(cell_value): <10}' if cell_value is not None else '-         '
+                cell_value = self.get_cell_value(cell_name) or "-"
+                cell_str = f'{str(cell_value): <10}'
                 row_cells.append(cell_str)
             rows.append(' '.join(row_cells))
 
@@ -139,9 +154,10 @@ class Spreadsheet:
         if not self.is_valid_cell_name(cell_name):
             raise ValueError(f"Invalid cell name '{cell_name}'."
                              f"Cell names must be in the format 'A1', 'B2', 'AZ10' etc.")
-        cell = Cell(value)
-        cell.formula = formula
+        cell = Cell(value, formula)
+        cell.set_value(cell.calculated_value(self))
         self.cells[cell_name] = cell
+
 
     def get_cell(self, cell_name: str) -> Optional[Cell]:
         """
@@ -188,12 +204,12 @@ class Spreadsheet:
             try:
                 value1 = float(side1)
             except ValueError:
-                value1 = self.get_raw_value(side1)
+                value1 = self.get_cell_value(side1)
             # Repeat the process for the second operand
             try:
                 value2 = float(side2)
             except ValueError:
-                value2 = self.get_raw_value(side2)
+                value2 = self.get_cell_value(side2)
 
             # checks the operation
             if operation == '+':
@@ -216,7 +232,7 @@ class Spreadsheet:
     def evaluate_formula(self, formula: str) -> Any:
         """
         calculates a given formula represented as a string.
-        :param formula: A string formula, for example: "A1 + B1".
+        :param formula: A string formula, for example: "A1 + B1", "AVERAGE(A1:B2)", "MIN(B1:Z3)"
         :return: The result of the formula calculation.
         :raises ValueError: If the formula is invalid or contains unknown operations.
         """
@@ -261,8 +277,13 @@ class Spreadsheet:
         """
         cell_names = self.get_range_cells(start, end)
         # Retrieve values and filtering out cells that do not exist or have None as their value.
-        values = [self.get_cell_value(name) for name in cell_names if self.get_cell_value(name) is not None]
-        # If there are no values after filtering, return None.
+        values = []
+        for name in cell_names:
+            if self.get_cell_value(name):
+                if isinstance(self.get_cell_value(name), int) or isinstance(self.get_cell_value(name), float):
+                    values.append(float(self.get_cell_value(name)))
+                else:
+                    return
         return values
 
     def find_min(self, start: str, end: str) -> Any:
@@ -272,8 +293,8 @@ class Spreadsheet:
         :param end: The ending cell name of the range.
         :return: float: the minimum value in the range.
         """
-        cell_names = self.cells_values_list(start, end)
         try:
+            cell_names = self.cells_values_list(start, end)
             return min(cell_names)
         except Exception as err:
             print(f"Error: {str(err)}")
@@ -436,11 +457,15 @@ class Spreadsheet:
         for name, data in loaded_dict.items():
             self.set_cell(name, data['value'], data['formula'])
 
-
+"""
 if __name__ == '__main__':
     spreadsheet = Spreadsheet()
     spreadsheet.set_cell('A1', 100)
     spreadsheet.set_cell('B1', 200)
     spreadsheet.set_cell('A2',None, "A1 * 2")
     spreadsheet.set_cell('B2',None, "B1 * 2")
+    spreadsheet.set_cell('A3', "Hello")
     print(spreadsheet)
+    spreadsheet.set_cell('B3', None, "MAX(A1:B2)")
+    print(spreadsheet.get_cell_value('B3'))
+"""

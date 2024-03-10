@@ -13,11 +13,22 @@ def test_is_valid_cell_name():
     assert spreadsheet.is_valid_cell_name("") == False
 
 def test_set_cell_valid_name():
-    spreadsheet = Spreadsheet()
-    spreadsheet.set_cell("A1", 10)
-    assert "A1" in spreadsheet.cells
-    assert isinstance(spreadsheet.cells["A1"], Cell)
-    assert spreadsheet.cells["A1"].value == 10
+    spread1 = Spreadsheet()
+    spread2 = Spreadsheet()
+    spread1.set_cell("A1", 10)
+    assert "A1" in spread1.cells
+    assert isinstance(spread1.cells["A1"], Cell)
+    assert spread1.cells["A1"].value == 10
+    spread2.set_cell('B2', formula="A1 * 2")
+    assert 'B2' in spread2.cells
+    assert spread2.cells['B2'].formula == "A1 * 2"
+    spread3 = Spreadsheet()
+    spread3.set_cell('A3', 200)
+    spread3.set_cell('A3', 300)  # Update the value
+    assert spread3.cells['A3'].value == 300
+    spread3.set_cell('A4', 500)
+    spread3.set_cell('A4', formula="A3 + 100")  # Change to formula
+    assert spread3.get_cell_value('A4') == 400
 
 def test_set_cell_invalid_name():
     spreadsheet = Spreadsheet()
@@ -78,7 +89,6 @@ def test_evaluate_formula_functions():
     assert spreadsheet.evaluate_formula("MIN(B1:B3)") == 30
     assert spreadsheet.evaluate_formula("MAX(B1:B3)") == 50
 
-
 def test_evaluate_formula_division_by_zero():
     spreadsheet = setup_spreadsheet()
     with pytest.raises(ValueError) as e:
@@ -95,19 +105,14 @@ def populate_spreadsheet(spreadsheet):
 
 def test_str_empty_spreadsheet():
     ss = Spreadsheet()
-    assert ss.__str__() == ""
+    assert str(ss) == ""
 
-def test_str_simple_version_non_empty():
+def test_str_non_empty():
     ss = Spreadsheet()
     ss = populate_spreadsheet(ss)
     expected_output_simple = "{\n  A1: 100,\n  B1: 200,\n  A2: 200.0 (Formula: A1 * 2),\n  B2: 400.0 (Formula: B1 * 2)\n}"
     assert str(ss) == expected_output_simple
 
-def test_str_detailed_version_non_empty():
-    ss = Spreadsheet()
-    populate_spreadsheet(ss)
-    expected_output_detailed = "{\n  A1: 100,\n  B1: 200,\n  A2: 200.0 (Formula: A1 * 2),\n  B2: 400.0 (Formula: B1 * 2)\n}"
-    assert str(ss) == expected_output_detailed
 
 def test_str_with_various_cell_values():
     ss = Spreadsheet()
@@ -122,3 +127,55 @@ def test_str_with_large_range():
     for i in range(1, 11):  # Populate A1:A10 with incrementing values
         ss.set_cell(f'A{i}', i * 10)
     assert "A10: 100" in str(ss)  # Check if the last cell is correctly represented
+
+def test_table_string_empty_spreadsheet():
+    ss = Spreadsheet()
+    expected_output = "The spreadsheet is empty."
+    assert ss.table_string() == expected_output
+
+def test_table_string_filled_spreadsheet():
+    ss = Spreadsheet()
+    ss.set_cell('A1', 100)  # Assuming set_cell takes numeric values directly
+    ss.set_cell('B2', 200)  # This should match with your setup; if expecting float, consider this in expected output
+    ss.set_cell('C3', "Hello")
+
+    expected_output = (
+        "     A          B          C         \n"
+        "-------------------------------------\n"
+        "1    100        -          -         \n"
+        "2    -          200        -         \n"  # Ensure this line matches how numbers are formatted in output
+        "3    -          -          Hello     "
+    )
+    # Adjust expected_output based on actual implementation details
+    assert ss.table_string().strip() == expected_output.strip()
+
+def test_check_operations():
+    """
+    the AVERAGE/MIN/MAX/SUM operations will work only if al the cell's values
+    in the range are integers or floats. for example, if one of the values are a string,
+    the operation will return None
+    :return:
+    """
+    spread1 = Spreadsheet()
+    spread1 = populate_spreadsheet(spread1)
+    spread1.set_cell('C5', None, 'AVERAGE(A1:B2)')
+    spread1.set_cell('C6', None, 'MIN(A1:B2)')
+    spread1.set_cell('C7', None, 'MAX(A1:B2)')
+    spread1.set_cell('C8', None, 'SUM(A1:B2)')
+    spread1.set_cell('B3', 'Hello')
+    spread1.set_cell('D5', None, 'AVERAGE(A1:B3)')
+    spread1.set_cell('D6', None, 'MIN(A1:B3)')
+    spread1.set_cell('D7', None, 'MAX(A1:B3)')
+    spread1.set_cell('D8', None, 'SUM(A1:B3)')
+    assert spread1.get_cell_value('C5') == 225.0
+    assert spread1.get_cell_value('C6') == 100.0
+    assert spread1.get_cell_value('C7') == 400.0
+    assert spread1.get_cell_value('C8') == 900.0
+    assert spread1.get_cell_value('D5') == None
+    assert spread1.get_cell_value('D6') == None
+    assert spread1.get_cell_value('D7') == None
+    assert spread1.get_cell_value('D8') == None
+
+
+
+
