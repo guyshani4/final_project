@@ -84,3 +84,41 @@ def test_evaluate_formula_division_by_zero():
     with pytest.raises(ValueError) as e:
         spreadsheet.evaluate_formula("A1 / 0")
     assert str(e.value) == "Division by zero"
+
+def populate_spreadsheet(spreadsheet):
+    spreadsheet.set_cell('A1', 100)
+    spreadsheet.set_cell('B1', 200)
+    spreadsheet.set_cell('A2',None, "A1 * 2")
+    spreadsheet.set_cell('B2',None, "B1 * 2")
+    return spreadsheet
+    # Assuming that formulas "A1 * 2" and "B1 * 2" would be evaluated to 200 and 400, respectively
+
+def test_str_empty_spreadsheet():
+    ss = Spreadsheet()
+    assert ss.__str__() == ""
+
+def test_str_simple_version_non_empty():
+    ss = Spreadsheet()
+    ss = populate_spreadsheet(ss)
+    expected_output_simple = "{\n  A1: 100,\n  B1: 200,\n  A2: 200.0 (Formula: A1 * 2),\n  B2: 400.0 (Formula: B1 * 2)\n}"
+    assert str(ss) == expected_output_simple
+
+def test_str_detailed_version_non_empty():
+    ss = Spreadsheet()
+    populate_spreadsheet(ss)
+    expected_output_detailed = "{\n  A1: 100,\n  B1: 200,\n  A2: 200.0 (Formula: A1 * 2),\n  B2: 400.0 (Formula: B1 * 2)\n}"
+    assert str(ss) == expected_output_detailed
+
+def test_str_with_various_cell_values():
+    ss = Spreadsheet()
+    ss.set_cell('A1', "Text")
+    ss.set_cell('B1',3.14159)
+    ss.set_cell('C1', True)
+    expected_part_of_output = "{\n  A1: Text,\n  B1: 3.14159,\n  C1: True\n}"
+    assert expected_part_of_output in str(ss)
+
+def test_str_with_large_range():
+    ss = Spreadsheet()
+    for i in range(1, 11):  # Populate A1:A10 with incrementing values
+        ss.set_cell(f'A{i}', i * 10)
+    assert "A10: 100" in str(ss)  # Check if the last cell is correctly represented

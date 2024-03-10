@@ -67,6 +67,67 @@ class Spreadsheet:
 
         return False
 
+    def __str__(self) -> str:
+        """
+        set a string representation of the spreadsheet.
+        For cells with formulas, both the formula and its evaluated value are displayed.
+        For cells without formulas, only the value is displayed.
+        If the spreadsheet is empty, a message indicating that is returned.
+        :return str: The formatted string representation of the spreadsheet's contents
+        """
+        if not self.cells:
+            print("the spreadsheet is empty.")
+            return ""
+
+        cell_strings = []
+        for cell_name, cell in self.cells.items():
+            if cell.formula:
+                # Assuming a method exists to evaluate the formula and get its value
+                evaluated_value = self.evaluate_formula(cell.formula)
+                cell_info = f"{cell_name}: {evaluated_value} (Formula: {cell.formula})"
+            else:
+                cell_info = f"{cell_name}: {cell.value}"
+            cell_strings.append(cell_info)
+
+        return "{\n  " + ",\n  ".join(cell_strings) + "\n}"
+
+    def table_string(self) -> str:
+        """
+        the function prints the spreadsheet as a string, with a specific
+        appear that looks like an Excel table.
+        :return: str
+        """
+        if not self.cells:
+            return "The spreadsheet is empty."
+
+        # Identify the max column and row by converting column letters to indices
+        max_col_index = 0
+        max_row = 0
+        for cell_name in self.cells.keys():
+            col, row = cell_name.rstrip('0123456789'), int(cell_name.lstrip("ABCDEFGHIJKLMNOPQRSTUVWXYZ"))
+            col_index = self.col_letter_to_index(col)
+            max_col_index = max(max_col_index, col_index)
+            max_row = max(max_row, row)
+
+        # Generate column headers
+        col_headers = [self.col_index_to_letter(i) for i in range(max_col_index + 1)]
+        header = '     ' + ' '.join(f'{col: <10}' for col in col_headers)
+        separator = '-' * len(header)
+
+        # Generate the table rows
+        rows = [header, separator]
+        for row_num in range(1, max_row + 1):
+            row_cells = [f'{row_num: <4}']
+            for i in range(max_col_index + 1):
+                col_letter = self.col_index_to_letter(i)
+                cell_name = f"{col_letter}{row_num}"
+                cell_value = self.cells.get(cell_name, Cell("-")).value
+                cell_str = f'{str(cell_value): <10}' if cell_value is not None else '-         '
+                row_cells.append(cell_str)
+            rows.append(' '.join(row_cells))
+
+        return '\n'.join(rows)
+
     def set_cell(self, cell_name: str, value: Optional[Any] = None, formula: Optional[str] = None) -> None:
         """
         Sets or updates a cell's value and/or formula.
@@ -376,4 +437,10 @@ class Spreadsheet:
             self.set_cell(name, data['value'], data['formula'])
 
 
-
+if __name__ == '__main__':
+    spreadsheet = Spreadsheet()
+    spreadsheet.set_cell('A1', 100)
+    spreadsheet.set_cell('B1', 200)
+    spreadsheet.set_cell('A2',None, "A1 * 2")
+    spreadsheet.set_cell('B2',None, "B1 * 2")
+    print(spreadsheet)
