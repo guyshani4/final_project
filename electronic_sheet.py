@@ -155,7 +155,11 @@ class Spreadsheet:
             raise ValueError(f"Invalid cell name '{cell_name}'."
                              f"Cell names must be in the format 'A1', 'B2', 'AZ10' etc.")
         cell = Cell(value, formula)
-        cell.set_value(cell.calculated_value(self))
+        try:
+            cell.set_value(float(value))
+            cell.set_value(cell.calculated_value(self))
+        except ValueError:
+            pass
         self.cells[cell_name] = cell
 
 
@@ -210,7 +214,9 @@ class Spreadsheet:
                 value2 = float(side2)
             except ValueError:
                 value2 = self.get_cell_value(side2)
-
+            if value2 == None or value1 == None:
+                print("formula cannot be calculated.. value is not exist")
+                return
             # checks the operation
             if operation == '+':
                 return value1 + value2
