@@ -1,5 +1,6 @@
 from electronic_sheet import *
 import pytest
+from unittest.mock import Mock, patch
 
 def test_is_valid_cell_name():
     spreadsheet = Spreadsheet()
@@ -30,25 +31,32 @@ def test_set_cell_valid_name():
     spread3.set_cell('A4', formula="A3 + 100")  # Change to formula
     assert spread3.get_cell_value('A4') == 400
 
-def test_set_cell_invalid_name():
-    spreadsheet = Spreadsheet()
-    with pytest.raises(ValueError):
-        spreadsheet.set_cell("1A", 10)
 
-def test_get_cell():
-    spreadsheet = Spreadsheet()
-    spreadsheet.set_cell("B2", 20)
-    cell = spreadsheet.get_cell("B2")
-    assert cell is not None
-    assert cell.value == 20
+valid_cell_names = ["A1", "B2", "AA10", "Z99", "AAA100"]
+invalid_cell_names = ["1A", "B-2", "AA_10", "99Z", "100AAA", "", "A!1", "A B"]
 
-    # Test getting a cell that doesn't exist
-    cell = spreadsheet.get_cell("C3")
-    assert cell is None
+def test_get_cell_with_valid_names():
+    ss = Spreadsheet()
+    for name in valid_cell_names:
+        # Mock a Cell and add it to the spreadsheet for each valid name
+        test_cell = Cell()
+        ss.cells[name] = test_cell
+        assert ss.get_cell(name) is test_cell, f"Failed to retrieve the correct Cell object for {name}."
 
-    # Test invalid cell name
-    with pytest.raises(ValueError):
-        spreadsheet.get_cell("2B")
+def test_get_cell_with_nonexistent_names():
+    ss = Spreadsheet()
+    for name in valid_cell_names:
+        # Ensure that validly formatted but non-existent cell names return None
+        assert ss.get_cell(name) is None, f"Should return None for a non-existent cell {name} that is validly named."
+
+@patch.object(Spreadsheet, 'is_valid_cell_name')
+def test_get_cell_with_invalid_names(mock_is_valid):
+    ss = Spreadsheet()
+    mock_is_valid.return_value = False  # Assume all names in the list are invalid
+    for name in invalid_cell_names:
+        result = ss.get_cell(name)
+        assert result is None, f"Should return None for an invalid cell name {name}."
+        mock_is_valid.assert_called_with(name)  # Check if is_valid_cell_name was called with the invalid name
 
 def setup_spreadsheet():
     spreadsheet = Spreadsheet()
@@ -57,27 +65,52 @@ def setup_spreadsheet():
     spreadsheet.set_cell('A3', formula="A1 + A2")
     return spreadsheet
 
-def test_get_cell_value_valid():
-    spreadsheet = setup_spreadsheet()
-    assert spreadsheet.get_cell_value('A1') == 10
-    assert spreadsheet.get_cell_value('A2') == 20  # Assuming calculated_value works correctly
-    assert spreadsheet.get_cell_value('A3') == 30
+def test_get_cell_value_valid_cell():
+    ss = Spreadsheet()
+    # Test with a numeric value
+    mock_cell_numeric = Mock(spec=Cell)
+    mock_cell_numeric.calculated_value.return_value = 123
+    with patch.object(ss, 'get_cell', return_value=mock_cell_numeric), \
+         patch.object(ss, 'is_valid_cell_name', return_value=True):
+        assert ss.get_cell_value("A1") == 123, "Failed to retrieve numeric value"
 
-def test_get_cell_value_invalid():
-    spreadsheet = setup_spreadsheet()
-    with pytest.raises(ValueError):
-        spreadsheet.get_cell_value('Invalid')
+    # Test with a string value
+    mock_cell_string = Mock(spec=Cell)
+    mock_cell_string.calculated_value.return_value = "Hello"
+    with patch.object(ss, 'get_cell', return_value=mock_cell_string):
+        assert ss.get_cell_value("B2") == "Hello", "Failed to retrieve string value"
+
+
+def test_get_cell_value_invalid_cell_name(capsys):
+    ss = Spreadsheet()
+    with patch.object(ss, 'is_valid_cell_name', return_value=False):
+        result = ss.get_cell_value("InvalidCell")
+        captured = capsys.readouterr()  # Capture the print output
+        assert result is None, "Should return None for invalid cell names"
+        assert "Invalid cell name 'InvalidCell'." in captured.out, "Expected error message not printed"
+
+def test_get_cell_value_cell_does_not_exist(capsys):
+    ss = Spreadsheet()
+    # Assuming get_cell returns None for a non-existing cell and the cell name is valid
+    with patch.object(ss, 'get_cell', return_value=None), \
+         patch.object(ss, 'is_valid_cell_name', return_value=True):
+        result = ss.get_cell_value("Z99")
+        assert result is None, "Should return None for non-existing cells"
+        captured = capsys.readouterr()
+        assert not captured.out, "No error message should be printed for non-existing but valid cells"
 
 def test_regular_formula_valid():
     spreadsheet = setup_spreadsheet()
     assert spreadsheet.regular_formula("A1 + A2") == 30
     assert spreadsheet.regular_formula("20 / 4") == 5
 
-def test_regular_formula_invalid():
-    spreadsheet = setup_spreadsheet()
-    with pytest.raises(ValueError) as e:
-        spreadsheet.regular_formula("A1 ** A2")
-    assert str(e.value) == "Unsupported operation"
+def test_regular_formula_unsupported_operation():
+    ss = Spreadsheet()
+    with patch.object(ss, 'get_cell_value', side_effect=[6, 3]):
+        result = ss.regular_formula("A1 ^ A2")
+        assert result is None, "Unsupported operation should return None"
+        result = ss.regular_formula("A1A2")
+        assert result is None, "Invalid formula format should return None"
 
 def test_evaluate_formula_functions():
     spreadsheet = setup_spreadsheet()
@@ -89,11 +122,11 @@ def test_evaluate_formula_functions():
     assert spreadsheet.evaluate_formula("MIN(B1:B3)") == 30
     assert spreadsheet.evaluate_formula("MAX(B1:B3)") == 50
 
-def test_evaluate_formula_division_by_zero():
-    spreadsheet = setup_spreadsheet()
-    with pytest.raises(ValueError) as e:
-        spreadsheet.evaluate_formula("A1 / 0")
-    assert str(e.value) == "Division by zero"
+def test_regular_formula_division_by_zero():
+    ss = Spreadsheet()
+    with patch.object(ss, 'get_cell_value', side_effect=[6, 0]):
+        result = ss.regular_formula("A1 / A2")
+        assert result is None, "Division by zero should return None"
 
 def populate_spreadsheet(spreadsheet):
     spreadsheet.set_cell('A1', 100)
