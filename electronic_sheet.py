@@ -155,10 +155,12 @@ class Spreadsheet:
             raise ValueError(f"Invalid cell name '{cell_name}'."
                              f"Cell names must be in the format 'A1', 'B2', 'AZ10' etc.")
         cell = Cell(value, formula)
+        if not value:
+            cell.set_value(cell.calculated_value(self))
         try:
             cell.set_value(float(value))
             cell.set_value(cell.calculated_value(self))
-        except ValueError:
+        except:
             pass
         self.cells[cell_name] = cell
 
@@ -191,7 +193,6 @@ class Spreadsheet:
             except Exception as err:
                 print(f"Error: {str(err)}")
                 return
-        print("Cell does not exist")
         return
 
     def regular_formula(self, formula: str) -> Any:

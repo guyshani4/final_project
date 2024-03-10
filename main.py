@@ -18,31 +18,36 @@ def main():
                 continue
         elif command.lower() == "help":
             print("The Optional Commands:")
-            print("  set [cell] [value] - Set the value of a cell (value can be a number or a string).")
-            print("  formula [cell] [formula] - Set the formula for a cell and updates its value.")
-            print("  get [cell] - Get the value of a cell, if exists.")
-            print("  quit - Exit the program with option to save.")
+            print("  - set [cell] [value] - Set the value of a cell (value can be a number or a string).")
+            print("  - formula [cell] [formula] - Set the formula for a cell and updates its value.\n"
+                  "             PAY ATTENTION! the formulas should be combination of numbers and cells only.\n"
+                  "             there are 4 special formulas: 'AVERAGE' 'MIN' 'MAX' 'SUM'. \n             "
+                  "these formulas should be typed in a specific form. \n"
+                  "             for example: MAX(A1:B2) is correct and will set"
+                  "the maximum number in the range of A1 and B2 ")
+            print("  - get [cell] - Get the value of a cell. if not exists, print '-'.")
+            print("  - quit - Exit the program with option to save.")
+            print("  - show - shows the spreadsheet in an organized table")
+
+
         elif command.strip().startswith("set "):
             _, cell_name, value = command.split(maxsplit=2)
             spreadsheet.set_cell(cell_name, value=value)
-            print(f"Set {cell_name} to {value}.")
+            print(spreadsheet)
+
         elif command.startswith("formula "):
             _, cell_name, formula = command.split(maxsplit=2)
-            ss.set_cell(cell_name, formula=formula)
-            print(f"Set formula for {cell_name} to {formula}.")
+            spreadsheet.set_cell(cell_name, formula=formula)
+            print(spreadsheet)
+
         elif command.startswith("get "):
             _, cell_name = command.split()
-            value = ss.get_cell_value(cell_name)
+            value = spreadsheet.get_cell_value(cell_name)
             print(f"{cell_name}: {value if value is not None else '-'}")
-        elif command.startswith("eval "):
-            _, formula = command.split(maxsplit=1)
-            try:
-                result = ss.evaluate_formula(formula)
-                print(f"Result: {result}")
-            except Exception as e:
-                print(f"Error evaluating formula: {str(e)}")
-        else:
-            print("Unknown command. Type 'help' for options.")
+
+        elif command.startswith("show"):
+            print(spreadsheet.table_string())
+
 
 if __name__ == "__main__":
     main()
