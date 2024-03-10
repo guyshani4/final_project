@@ -33,12 +33,14 @@ def main():
         elif command.strip().startswith("set "):
             _, cell_name, value = command.split(maxsplit=2)
             spreadsheet.set_cell(cell_name, value=value)
-            print(spreadsheet)
+            if spreadsheet.cells != {}:
+                print(spreadsheet)
 
         elif command.startswith("formula "):
             _, cell_name, formula = command.split(maxsplit=2)
             spreadsheet.set_cell(cell_name, formula=formula)
-            print(spreadsheet)
+            if spreadsheet.cells != {}:
+                print(spreadsheet)
 
         elif command.startswith("get "):
             _, cell_name = command.split()

@@ -152,8 +152,9 @@ class Spreadsheet:
         If provided, the cell's value will be determined by this formula.
         """
         if not self.is_valid_cell_name(cell_name):
-            raise ValueError(f"Invalid cell name '{cell_name}'."
-                             f"Cell names must be in the format 'A1', 'B2', 'AZ10' etc.")
+            print(f"Invalid cell name '{cell_name}'." 
+                  f" Cell names must be in the format 'A1', 'B2', 'AZ10' etc.")
+            return
         cell = Cell(value, formula)
         if not value:
             cell.set_value(cell.calculated_value(self))
@@ -172,11 +173,12 @@ class Spreadsheet:
         :return: The Cell object if found, None otherwise.
         """
         if not self.is_valid_cell_name(cell_name):
-            raise ValueError(f"Invalid cell name '{cell_name}'. Cell names must be in the format 'A1', 'B2', etc.")
+            print(f"Invalid cell name '{cell_name}'."
+                  f" Cell names must be in the format 'A1', 'B2', 'AZ10' etc.")
+            return
         if cell_name in self.cells:
             return self.cells[cell_name]
-        else:
-            return None
+        return
 
     def get_cell_value(self, cell_name: str) -> Any:
         """
@@ -185,7 +187,9 @@ class Spreadsheet:
         :return: The evaluated value of the cell or an error message if the cell does not exist.
         """
         if not self.is_valid_cell_name(cell_name):
-            raise ValueError(f"Invalid cell name '{cell_name}'. Cell names must be in the format 'A1', 'B2', etc.")
+            print(f"Invalid cell name '{cell_name}'." 
+                  f" Cell names must be in the format 'A1', 'B2', 'AZ10' etc.")
+            return
         cell = self.get_cell(cell_name)
         if cell:
             try:
@@ -215,7 +219,7 @@ class Spreadsheet:
                 value2 = float(side2)
             except ValueError:
                 value2 = self.get_cell_value(side2)
-            if value2 == None or value1 == None:
+            if value2 is None or value1 is None:
                 print("formula cannot be calculated.. value is not exist")
                 return
             # checks the operation
@@ -229,11 +233,14 @@ class Spreadsheet:
                 if value2 != 0:
                     return value1 / value2
                 else:
-                    raise ValueError("Division by zero")
+                    print("Error: Division by zero.")
+                    return
             else:
-                raise ValueError("Unsupported operation")
+                print("Unsupported operation.")
+                return
         else:
-            raise ValueError("Invalid formula format")
+            print("Invalid formula format.")
+            return
 
 
     def evaluate_formula(self, formula: str) -> Any:
@@ -241,7 +248,8 @@ class Spreadsheet:
         calculates a given formula represented as a string.
         :param formula: A string formula, for example: "A1 + B1", "AVERAGE(A1:B2)", "MIN(B1:Z3)"
         :return: The result of the formula calculation.
-        :raises ValueError: If the formula is invalid or contains unknown operations.
+        :If the formula is invalid or contains unknown operations, it returns None
+        and prints a message to the user.
         """
         if formula.startswith("AVERAGE"):
             try:
@@ -352,7 +360,7 @@ class Spreadsheet:
         formula = formula.replace(")", "")
         cell_list = formula.split(":")
         if len(cell_list) != 2:
-            raise ValueError("index can not be calculated")
+            print("the formula does not fit the requirements")
         return cell_list[0], cell_list[1]
 
     def calculate_average(self, start: str, end: str) -> Any:
@@ -376,18 +384,23 @@ class Spreadsheet:
         Retrieves the raw value of a cell without evaluating its formula.
         :param cell_name: The name of the cell to retrieve the value from.
         :return: The value of the cell.
-        :raises ValueError: If the cell is empty, has an invalid value, or does not exist.
+        :If the cell is empty, has an invalid value, or does not exist, the function
+        return None and prints a message to the user.
         """
         if not self.is_valid_cell_name(cell_name):
-            raise ValueError(f"Invalid cell name '{cell_name}'. Cell names must be in the format 'A1', 'B2', etc.")
+            print(f"Invalid cell name '{cell_name}'."
+                  f" Cell names must be in the format 'A1', 'B2', 'AZ10' etc.")
+            return
         cell = self.get_cell(cell_name)
         if cell:
             if cell.value is not None:
                 return cell.value
             else:
-                raise ValueError(f"Cell {cell_name} is empty or has an invalid value.")
+                print(f"Cell {cell_name} is empty or has an invalid value.")
+                return
         else:
-            raise ValueError(f"Cell {cell_name} does not exist.")
+            print(f"Cell {cell_name} does not exist in the spreadsheet.")
+            return
 
     def col_letter_to_index(self, col: str) -> int:
         """
@@ -415,7 +428,7 @@ class Spreadsheet:
             index = index // LETTERS_NUM - 1
         return col
 
-    def get_range_cells(self, start: str, end: str) -> List[str]:
+    def get_range_cells(self, start: str, end: str) -> Any:
         """
         creates a list of cell names in a range that can span multiple columns and rows.
         for example: (A1, B2) -> ["A1", "A2", "B1", "B2"]
@@ -434,7 +447,8 @@ class Spreadsheet:
         end_col_index = self.col_letter_to_index(end_col[0])
 
         if start_col_index > end_col_index or start_row > end_row:
-            raise ValueError(f"Invalid cells range. '{end}' comes after '{start}")
+            print(f"Invalid cells range. '{end}' comes after '{start}")
+            return
         # Creates the list of all the indexes as strings.
         cells = []
         for col in range(start_col_index, end_col_index + 1):
