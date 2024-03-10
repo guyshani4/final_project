@@ -1,6 +1,8 @@
 import json
 from typing import *
 LETTERS_NUM = 26
+
+
 class Cell:
     """
     Represents a single cell in a Spreadsheet.
@@ -27,7 +29,6 @@ class Cell:
 
     def set_value(self, value):
         self.value = value
-
 
 
 class Spreadsheet:
@@ -251,6 +252,7 @@ class Spreadsheet:
         :If the formula is invalid or contains unknown operations, it returns None
         and prints a message to the user.
         """
+
         if formula.startswith("AVERAGE"):
             try:
                 cells = self.valid_cells_index(formula)
@@ -298,6 +300,7 @@ class Spreadsheet:
                 if isinstance(self.get_cell_value(name), int) or isinstance(self.get_cell_value(name), float):
                     values.append(float(self.get_cell_value(name)))
                 else:
+                    print("impossible operation... there is a cell in the range that is not a number.")
                     return
         return values
 
@@ -402,6 +405,7 @@ class Spreadsheet:
             print(f"Cell {cell_name} does not exist in the spreadsheet.")
             return
 
+
     def col_letter_to_index(self, col: str) -> int:
         """
         Converts a column letter (LIKE "A") to an integer index (for example, "A" -> "0").
@@ -478,15 +482,3 @@ class Spreadsheet:
         for name, data in loaded_dict.items():
             self.set_cell(name, data['value'], data['formula'])
 
-"""
-if __name__ == '__main__':
-    spreadsheet = Spreadsheet()
-    spreadsheet.set_cell('A1', 100)
-    spreadsheet.set_cell('B1', 200)
-    spreadsheet.set_cell('A2',None, "A1 * 2")
-    spreadsheet.set_cell('B2',None, "B1 * 2")
-    spreadsheet.set_cell('A3', "Hello")
-    print(spreadsheet)
-    spreadsheet.set_cell('B3', None, "MAX(A1:B2)")
-    print(spreadsheet.get_cell_value('B3'))
-"""

@@ -31,16 +31,26 @@ def main():
 
 
         elif command.strip().startswith("set "):
-            _, cell_name, value = command.split(maxsplit=2)
-            spreadsheet.set_cell(cell_name, value=value)
+            try:
+                _, cell_name, value = command.split(maxsplit=2)
+                spreadsheet.set_cell(cell_name, value=value)
+            except Exception as err:
+                print("oops. not a valid command")
+                print(f"Error: {str(err)}")
+                continue
             if spreadsheet.cells != {}:
-                print(spreadsheet)
+                print(spreadsheet.table_string())
 
         elif command.startswith("formula "):
-            _, cell_name, formula = command.split(maxsplit=2)
-            spreadsheet.set_cell(cell_name, formula=formula)
+            try:
+                _, cell_name, formula = command.split(maxsplit=2)
+                spreadsheet.set_cell(cell_name, formula=formula)
+            except Exception as err:
+                print("oops. not a valid command")
+                print(f"Error: {str(err)}")
+                continue
             if spreadsheet.cells != {}:
-                print(spreadsheet)
+                print(spreadsheet.table_string())
 
         elif command.startswith("get "):
             _, cell_name = command.split()
