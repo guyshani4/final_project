@@ -203,6 +203,7 @@ class Spreadsheet:
         values = [self.get_cell_value(name) for name in cell_names if self.get_cell_value(name) is not None]
         # If there are no values after filtering, return None.
         return values
+
     def find_min(self, start: str, end: str) -> Any:
         """
         finds the minimum cell value in a specific range that was given
@@ -310,6 +311,7 @@ class Spreadsheet:
         for char in col:
             index = index * LETTERS_NUM + (ord(char.upper()) - ord('A') + 1)
         return index - 1
+
 
     def col_index_to_letter(self, index: int) -> str:
         """
