@@ -47,10 +47,12 @@ class Workbook:
 
         :return: A list of sheet names in the workbook.
         """
+        return list(self.sheets.keys())
+
+    def print_list(self):
         print("Sheets in the workbook:")
         for name in self.sheets.keys():
             print(name)
-        return list(self.sheets.keys())
 
     def rename_sheet(self, old_name, new_name):
         """

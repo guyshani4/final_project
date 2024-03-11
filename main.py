@@ -34,7 +34,12 @@ def main():
             print("  - quit - Exit the program with option to save.")
             print("  - show - shows the spreadsheet in an organized table")
             print("  - remove [cell] - Removes the cell's value")
-            print("  - new sheet ")
+            print("  - new - opens a new sheet in your workbook")
+            print("  - sheets - if you want to see the sheet's list and choose which sheet to open")
+            print("  - rename - if you want to rename a sheet")
+            print("  - change sheet - if you want to rename a sheet")
+
+
 
 
         elif command.startswith("set "):
@@ -72,6 +77,38 @@ def main():
             _, cell_name = command.split(maxsplit=1)
             spreadsheet.remove_cell(cell_name)
             print(spreadsheet)
+        elif command.startswith("new"):
+            sheet_name = input("name the new sheet: ")
+            workbook.add_sheet(sheet_name)
+            spreadsheet = workbook.get_sheet(sheet_name)
+            print(f"You're in {sheet_name} sheet. Type 'help' for options, or start editing.")
+        elif command.startswith("sheets"):
+            print(workbook.list_sheets())
+            sheet_name = input("which sheet would you like to open? ")
+            spreadsheet = workbook.get_sheet(sheet_name)
+            print(f"You're in {sheet_name} sheet. Type 'help' for options, or start editing.")
+        elif command.startswith("rename"):
+            workbook.print_list()
+            sheet_name = input("which sheet would you like to rename? ")
+            while sheet_name not in workbook.list_sheets():
+                sheet_name = input("name did not found..."
+                                   "which sheet would you like to rename? ")
+            new_name = input("which name would you like to call it? ")
+            workbook.rename_sheet(sheet_name, new_name)
+            spreadsheet = workbook.get_sheet(new_name)
+            print(f"You're in {new_name} sheet. Type 'help' for options, or start editing.")
+        elif command.startswith("change"):
+            new_name = input("which sheet would you like to get into? ")
+            workbook.print_list()
+            while new_name not in workbook.list_sheets():
+                new_name = input("name did not found..."
+                                 "which sheet would you like to get into? ")
+
+            spreadsheet = workbook.get_sheet(new_name)
+            print(f"You're in {new_name} sheet. Type 'help' for options, or start editing.")
+
+
+
 
 
 
