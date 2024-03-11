@@ -1,7 +1,6 @@
 from electronic_sheet import *
 import pytest
 from unittest.mock import Mock, patch
-
 def test_is_valid_cell_name():
     spreadsheet = Spreadsheet()
     # Test valid cell names

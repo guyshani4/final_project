@@ -48,6 +48,8 @@ class Spreadsheet:
         Initializes a new Spreadsheet instance with an empty dictionary of cells.
         """
         self.cells = {}
+        self.undo_stack = []
+        self.redo_stack = []
 
     def is_valid_cell_name(self, cell_name: str) -> bool:
         """
@@ -180,9 +182,28 @@ class Spreadsheet:
                 # Add the current cell as a dependent to each cell it references
                 self.cells[dep_name].add_dependent(cell_name)
                 cell.set_value(cell.calculated_value(self))
-        if value.isnumeric():
+        try:
             cell.set_value(float(value))
+        except:
+            pass
 
+
+    def perform_command(self, command):
+        command.execute()
+        self.undo_stack.append(command)
+        self.redo_stack.clear()
+
+    def undo(self):
+        if self.undo_stack:
+            command = self.undo_stack.pop()
+            command.undo()
+            self.redo_stack.append(command)
+
+    def redo(self):
+        if self.redo_stack:
+            command = self.redo_stack.pop()
+            command.execute()
+            self.undo_stack.append(command)
 
     def get_cell(self, cell_name: str) -> Optional[Cell]:
         """
@@ -319,9 +340,6 @@ class Spreadsheet:
             if self.get_cell_value(name):
                 if isinstance(self.get_cell_value(name), int) or isinstance(self.get_cell_value(name), float):
                     values.append(float(self.get_cell_value(name)))
-                else:
-                    print("impossible operation... there is a cell in the range that is not a number.")
-                    return
         return values
 
     def find_min(self, start: str, end: str) -> Any:
@@ -502,7 +520,46 @@ class Spreadsheet:
         for name, data in loaded_dict.items():
             self.set_cell(name, data['value'], data['formula'])
 
-"""
+    def remove_cell(self, cell_name: str) -> None:
+        if cell_name not in self.cells:
+            return
+        if self.get_cell(cell_name).formula:
+            formula = self.get_cell(cell_name).formula
+            if len(formula) >= 5:
+                cells = self.valid_cells_index(formula)
+                dependencies = self.get_range_cells(cells[0], cells[1])
+            else:
+                dependencies = [formula[:2]]
+            for dep_name in dependencies:
+                self.get_cell(dep_name).dependents.remove(cell_name)
+        del self.cells[cell_name]
+
+
+
+
+class Command:
+    def execute(self):
+        pass
+
+    def undo(self):
+        pass
+
+class SetValueCommand(Command):
+    def __init__(self, spreadsheet, cell_name, new_value):
+        self.spreadsheet = spreadsheet
+        self.cell_name = cell_name
+        self.new_value = new_value
+        self.prev_value = None
+
+    def execute(self):
+        self.prev_value = self.spreadsheet.get_cell_value(self.cell_name)
+        self.spreadsheet.set_cell(self.cell_name, self.new_value)
+
+    def undo(self):
+        self.spreadsheet.set_cell(self.cell_name, self.prev_value)
+
+
+
 if __name__ == "__main__":
     spread = Spreadsheet()
     spread.set_cell("A1", 50)
@@ -511,4 +568,3 @@ if __name__ == "__main__":
     spread.set_cell("B2", formula="SUM(A1:A3)")
     print(spread)
 
-"""

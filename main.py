@@ -28,18 +28,24 @@ def main():
             print("  - get [cell] - Get the value of a cell. if not exists, print '-'.")
             print("  - quit - Exit the program with option to save.")
             print("  - show - shows the spreadsheet in an organized table")
+            print("  - remove [cell] - Removes the cell's value")
+            print("  - redo/undo ")
 
 
         elif command.startswith("set "):
             try:
                 _, cell_name, value = command.split(maxsplit=2)
                 spreadsheet.set_cell(cell_name, value=value)
+                # dfiuwdgivcbjkdbcijwhfubejfjudfbjdbcjwbciebfeb
+                command = SetValueCommand(spreadsheet, cell_name, spreadsheet.get_cell_value(cell_name))
+                spreadsheet.perform_command(command)
             except Exception as err:
                 print("oops. not a valid command")
                 print(f"Error: {str(err)}")
                 continue
             if spreadsheet.cells != {}:
                 print(spreadsheet)
+
 
         elif command.startswith("formula "):
             try:
@@ -59,6 +65,21 @@ def main():
 
         elif command.startswith("show"):
             print(spreadsheet)
+
+        elif command.startswith("remove"):
+            _, cell_name = command.split(maxsplit=1)
+            spreadsheet.remove_cell(cell_name)
+            print(spreadsheet)
+
+        elif command.startswith("redo"):
+            spreadsheet.redo()
+            print(spreadsheet)
+
+        elif command.startswith("undo"):
+            spreadsheet.undo()
+            print(spreadsheet)
+
+
 
 
 if __name__ == "__main__":
