@@ -30,7 +30,7 @@ def main():
             print("  - show - shows the spreadsheet in an organized table")
 
 
-        elif command.strip().startswith("set "):
+        elif command.startswith("set "):
             try:
                 _, cell_name, value = command.split(maxsplit=2)
                 spreadsheet.set_cell(cell_name, value=value)

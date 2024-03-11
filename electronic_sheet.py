@@ -169,42 +169,20 @@ class Spreadsheet:
 
         # If updating a cell with a formula, parse the formula to identify dependencies
         if formula:
-            cells = self.valid_cells_index(formula)
-            dependencies = self.get_range_cells(cells[0], cells[1])
+            if len(formula) >= 5:
+                cells = self.valid_cells_index(formula)
+                dependencies = self.get_range_cells(cells[0], cells[1])
+            else:
+                dependencies = [formula[:2]]
             for dep_name in dependencies:
                 if dep_name not in self.cells:
                     self.cells[dep_name] = Cell()
                 # Add the current cell as a dependent to each cell it references
                 self.cells[dep_name].add_dependent(cell_name)
                 cell.set_value(cell.calculated_value(self))
-        try:
+        if value.isnumeric():
             cell.set_value(float(value))
-        except:
-            pass
 
-    """
-    def set_cell(self, cell_name: str, value: Optional[Any] = None, formula: Optional[str] = None) -> None:
-        
-        Sets or updates a cell's value and/or formula.
-        :param cell_name: A string identifier for the cell (for example: "A1").
-        :param value: The value to set in the cell.
-        :param formula: An optional formula for the cell.
-        If provided, the cell's value will be determined by this formula.
-        
-        if not self.is_valid_cell_name(cell_name):
-            print(f"Invalid cell name '{cell_name}'." 
-                  f" Cell names must be in the format 'A1', 'B2', 'AZ10' etc.")
-            return
-        cell = Cell(value, formula)
-        if not value:
-            cell.set_value(cell.calculated_value(self))
-        try:
-            cell.set_value(float(value))
-            cell.set_value(cell.calculated_value(self))
-        except:
-            pass
-        self.cells[cell_name] = cell
-    """
 
     def get_cell(self, cell_name: str) -> Optional[Cell]:
         """
@@ -246,7 +224,10 @@ class Spreadsheet:
         :param formula: a string with the formula
         :return: the answer of the formula. if the formula doesnt meet the string requirements, None.
         """
-        parts = formula.split()
+        parts = []
+        for index,sign in enumerate(formula):
+            if sign in ['*', '/', '+', '-']:
+                parts = [formula[:index], sign, formula[index+1]]
         if len(parts) == 3:
             side1, operation, side2 = parts
             # Try converting the first operand to a number, if it fails, treat it as a cell reference
@@ -521,3 +502,13 @@ class Spreadsheet:
         for name, data in loaded_dict.items():
             self.set_cell(name, data['value'], data['formula'])
 
+"""
+if __name__ == "__main__":
+    spread = Spreadsheet()
+    spread.set_cell("A1", 50)
+    spread.set_cell("A3", 10)
+    spread.set_cell("B1", formula="A1/2")
+    spread.set_cell("B2", formula="SUM(A1:A3)")
+    print(spread)
+
+"""
