@@ -1,8 +1,13 @@
 from electronic_sheet import *
+from workbook import *
 
 def main():
-    spreadsheet = Spreadsheet()
-    print("Welcome to the Spreadsheet CLI. Type 'help' for options, or start editing.")
+    workbook = Workbook()
+    print("Welcome to the your WorkBook! first, you'll need to type the name of the first sheet in your project.")
+    sheet_name = input("type here: > ").strip()
+    workbook.add_sheet(sheet_name)
+    spreadsheet = workbook.get_sheet(sheet_name)
+    print(f"You're in {sheet_name} sheet. Type 'help' for options, or start editing.")
 
     while True:
         command = input("> ").strip()
@@ -29,16 +34,13 @@ def main():
             print("  - quit - Exit the program with option to save.")
             print("  - show - shows the spreadsheet in an organized table")
             print("  - remove [cell] - Removes the cell's value")
-            print("  - redo/undo ")
+            print("  - new sheet ")
 
 
         elif command.startswith("set "):
             try:
                 _, cell_name, value = command.split(maxsplit=2)
                 spreadsheet.set_cell(cell_name, value=value)
-                # dfiuwdgivcbjkdbcijwhfubejfjudfbjdbcjwbciebfeb
-                command = SetValueCommand(spreadsheet, cell_name, spreadsheet.get_cell_value(cell_name))
-                spreadsheet.perform_command(command)
             except Exception as err:
                 print("oops. not a valid command")
                 print(f"Error: {str(err)}")
@@ -71,13 +73,6 @@ def main():
             spreadsheet.remove_cell(cell_name)
             print(spreadsheet)
 
-        elif command.startswith("redo"):
-            spreadsheet.redo()
-            print(spreadsheet)
-
-        elif command.startswith("undo"):
-            spreadsheet.undo()
-            print(spreadsheet)
 
 
 

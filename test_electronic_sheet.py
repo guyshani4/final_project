@@ -160,12 +160,12 @@ def test_str_with_large_range():
         ss.set_cell(f'A{i}', i * 10)
     assert "A10: 100" in str(ss)  # Check if the last cell is correctly represented
 
-def test_table_string_empty_spreadsheet():
+def test_print_empty_spreadsheet():
     ss = Spreadsheet()
     expected_output = "The spreadsheet is empty."
-    assert ss.table_string() == expected_output
+    assert print(ss) == expected_output
 
-def test_table_string_filled_spreadsheet():
+def test_print_filled_spreadsheet():
     ss = Spreadsheet()
     ss.set_cell('A1', 100)  # Assuming set_cell takes numeric values directly
     ss.set_cell('B2', 200)  # This should match with your setup; if expecting float, consider this in expected output
@@ -179,7 +179,7 @@ def test_table_string_filled_spreadsheet():
          '3    -          -          Hello'
     )
     # Adjust expected_output based on actual implementation details
-    assert ss.table_string().strip() == expected_output.strip()
+    assert ss.__str__().strip() == expected_output.strip()
 
 def test_check_operations():
     """

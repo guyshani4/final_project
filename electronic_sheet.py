@@ -48,8 +48,7 @@ class Spreadsheet:
         Initializes a new Spreadsheet instance with an empty dictionary of cells.
         """
         self.cells = {}
-        self.undo_stack = []
-        self.redo_stack = []
+        #self.name = sheet_name
 
     def is_valid_cell_name(self, cell_name: str) -> bool:
         """
@@ -187,23 +186,6 @@ class Spreadsheet:
         except:
             pass
 
-
-    def perform_command(self, command):
-        command.execute()
-        self.undo_stack.append(command)
-        self.redo_stack.clear()
-
-    def undo(self):
-        if self.undo_stack:
-            command = self.undo_stack.pop()
-            command.undo()
-            self.redo_stack.append(command)
-
-    def redo(self):
-        if self.redo_stack:
-            command = self.redo_stack.pop()
-            command.execute()
-            self.undo_stack.append(command)
 
     def get_cell(self, cell_name: str) -> Optional[Cell]:
         """
@@ -534,32 +516,7 @@ class Spreadsheet:
                 self.get_cell(dep_name).dependents.remove(cell_name)
         del self.cells[cell_name]
 
-
-
-
-class Command:
-    def execute(self):
-        pass
-
-    def undo(self):
-        pass
-
-class SetValueCommand(Command):
-    def __init__(self, spreadsheet, cell_name, new_value):
-        self.spreadsheet = spreadsheet
-        self.cell_name = cell_name
-        self.new_value = new_value
-        self.prev_value = None
-
-    def execute(self):
-        self.prev_value = self.spreadsheet.get_cell_value(self.cell_name)
-        self.spreadsheet.set_cell(self.cell_name, self.new_value)
-
-    def undo(self):
-        self.spreadsheet.set_cell(self.cell_name, self.prev_value)
-
-
-
+"""
 if __name__ == "__main__":
     spread = Spreadsheet()
     spread.set_cell("A1", 50)
@@ -567,4 +524,6 @@ if __name__ == "__main__":
     spread.set_cell("B1", formula="A1/2")
     spread.set_cell("B2", formula="SUM(A1:A3)")
     print(spread)
+
+"""
 
