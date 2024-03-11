@@ -39,7 +39,7 @@ def main():
                 print(f"Error: {str(err)}")
                 continue
             if spreadsheet.cells != {}:
-                print(spreadsheet.table_string())
+                print(spreadsheet)
 
         elif command.startswith("formula "):
             try:
@@ -50,7 +50,7 @@ def main():
                 print(f"Error: {str(err)}")
                 continue
             if spreadsheet.cells != {}:
-                print(spreadsheet.table_string())
+                print(spreadsheet)
 
         elif command.startswith("get "):
             _, cell_name = command.split()
@@ -58,7 +58,7 @@ def main():
             print(f"{cell_name}: {value if value is not None else '-'}")
 
         elif command.startswith("show"):
-            print(spreadsheet.table_string())
+            print(spreadsheet)
 
 
 if __name__ == "__main__":

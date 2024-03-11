@@ -15,6 +15,14 @@ class Cell:
         """
         self.value = value
         self.formula = formula
+        self.dependents = set()  # Cells that depend on this cell
+
+    def add_dependent(self, cell_name):
+        self.dependents.add(cell_name)
+
+    def remove_dependent(self, cell_name):
+        if cell_name in self.dependents:
+            self.dependents.remove(cell_name)
 
     def calculated_value(self, spreadsheet: 'Spreadsheet') -> Any:
         """
@@ -72,7 +80,7 @@ class Spreadsheet:
 
         return False
 
-    def __str__(self) -> str:
+    def dict_print(self) -> str:
         """
         set a string representation of the spreadsheet.
         For cells with formulas, both the formula and its evaluated value are displayed.
@@ -96,7 +104,7 @@ class Spreadsheet:
 
         return "{\n  " + ",\n  ".join(cell_strings) + "\n}"
 
-    def table_string(self) -> str:
+    def __str__(self) -> str:
         """
         Generates a string representation of the spreadsheet in a table format.
         This method creates a visual table where each cell is aligned in columns and rows,
@@ -137,21 +145,52 @@ class Spreadsheet:
             for i in range(max_col_index + 1):
                 col_letter = self.col_index_to_letter(i)
                 cell_name = f"{col_letter}{row_num}"
-                cell_value = self.get_cell_value(cell_name) or "-"
+                cell_value = self.get_cell_value(cell_name)
+                cell_value = "-" if cell_value is None else cell_value
                 cell_str = f'{str(cell_value): <10}'
                 row_cells.append(cell_str)
             rows.append(' '.join(row_cells))
 
         return '\n'.join(rows)
 
+    def set_cell(self, cell_name, value=None, formula=None):
+        if not self.is_valid_cell_name(cell_name):
+            print(f"Invalid cell name '{cell_name}'." 
+                  f" Cell names must be in the format 'A1', 'B2', 'AZ10' etc.")
+            return
+        # Ensure the cell exists in the dictionary; if not, create a new one
+        if cell_name not in self.cells:
+            self.cells[cell_name] = Cell()
+
+        # Update the cell's value or formula
+        cell = self.cells[cell_name]
+        cell.value = value
+        cell.formula = formula
+
+        # If updating a cell with a formula, parse the formula to identify dependencies
+        if formula:
+            cells = self.valid_cells_index(formula)
+            dependencies = self.get_range_cells(cells[0], cells[1])
+            for dep_name in dependencies:
+                if dep_name not in self.cells:
+                    self.cells[dep_name] = Cell()
+                # Add the current cell as a dependent to each cell it references
+                self.cells[dep_name].add_dependent(cell_name)
+                cell.set_value(cell.calculated_value(self))
+        try:
+            cell.set_value(float(value))
+        except:
+            pass
+
+    """
     def set_cell(self, cell_name: str, value: Optional[Any] = None, formula: Optional[str] = None) -> None:
-        """
+        
         Sets or updates a cell's value and/or formula.
         :param cell_name: A string identifier for the cell (for example: "A1").
         :param value: The value to set in the cell.
         :param formula: An optional formula for the cell.
         If provided, the cell's value will be determined by this formula.
-        """
+        
         if not self.is_valid_cell_name(cell_name):
             print(f"Invalid cell name '{cell_name}'." 
                   f" Cell names must be in the format 'A1', 'B2', 'AZ10' etc.")
@@ -165,7 +204,7 @@ class Spreadsheet:
         except:
             pass
         self.cells[cell_name] = cell
-
+    """
 
     def get_cell(self, cell_name: str) -> Optional[Cell]:
         """
