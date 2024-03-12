@@ -1,10 +1,12 @@
 from electronic_sheet import *
 
+
 class Workbook:
     """
     Represents a workbook containing multiple spreadsheet tabs,
     similar to a workbook in Excel containing multiple sheets.
     """
+
     def __init__(self):
         """
         Initializes a new workbook with an empty dictionary of sheets.
@@ -67,3 +69,27 @@ class Workbook:
         else:
             self.sheets[new_name] = self.sheets.pop(old_name)
             print(f"Sheet '{old_name}' has been renamed to '{new_name}'.")
+
+    def save_workbook(self, filename):
+        """
+        Saves the workbook to a file in JSON format.
+        :param filename: The name of the file to save the workbook to.
+        """
+        workbook_dict = {name: sheet.to_dict() for name, sheet in self.sheets.items()}
+        with open(filename, 'w') as f:
+            json.dump(workbook_dict, f)
+
+    def load_and_open_workbook(self, filename):
+        """
+        Loads a workbook file and opens it for editing.
+        :param filename: The name of the workbook file to be opened.
+        :return: The loaded Workbook instance.
+        """
+        with open(filename, 'r') as f:
+            workbook_dict = json.load(f)
+
+        for sheet_name, sheet_data in workbook_dict.items():
+            spreadsheet = Spreadsheet()
+            spreadsheet.load(sheet_data)
+            self.sheets[sheet_name] = spreadsheet
+        return self

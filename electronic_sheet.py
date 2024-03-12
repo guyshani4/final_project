@@ -482,14 +482,6 @@ class Spreadsheet:
                 cells.append(cell_name)
         return cells
 
-    def save_as(self, filename: str) -> None:
-        """
-        Saves the current state of the spreadsheet to a file in JSON format.
-        :param filename: The name of the file to save the spreadsheet to.
-        """
-        data_as_dict = {name: {'value': cell.value, 'formula': cell.formula} for name, cell in self.cells.items()}
-        with open(filename, 'w') as f:
-            json.dump(data_as_dict, f)
 
     def load(self, filename: str) -> None:
         """

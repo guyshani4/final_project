@@ -1,5 +1,8 @@
 from electronic_sheet import *
 from workbook import *
+from exporter import *
+import curses
+from curses import wrapper
 
 def main():
     workbook = Workbook()
@@ -40,6 +43,26 @@ def main():
             print("  - change sheet - if you want to rename a sheet")
             print("  - remove sheet - if you want to removes a sheet")
 
+        elif command.lower() == "save":
+            print("You can save the spreadsheet in the following formats:")
+            print("  - csv")
+            print("  - excel")
+            print("  - pdf")
+            print("  - json")
+            save_format = input("Please enter the format you want to save the spreadsheet in: ")
+            filename = input("Please enter the filename: ")
+            exporter = WorkbookExporter(spreadsheet)
+            if save_format.lower() == "csv":
+                exporter.export_to_csv(filename)
+            elif save_format.lower() == "excel":
+                exporter.export_to_excel(filename)
+            elif save_format.lower() == "pdf":
+                exporter.export_to_pdf(filename)
+            elif save_format.lower() == "json":
+                exporter.export_to_json(filename)
+            else:
+                print("Invalid format. Please enter either 'csv', 'excel', 'pdf', or 'json'.")
+
 
 
         elif command.startswith("set "):
@@ -76,17 +99,20 @@ def main():
             _, cell_name = command.split(maxsplit=1)
             spreadsheet.remove_cell(cell_name)
             print(spreadsheet)
+
         elif command.startswith("new"):
             sheet_name = input("name the new sheet: ")
             workbook.add_sheet(sheet_name)
             spreadsheet = workbook.get_sheet(sheet_name)
             print(f"You're in {sheet_name} sheet. Type 'help' for options, or start editing.")
+
         elif command.startswith("sheets"):
             print(workbook.list_sheets())
             sheet_name = input("which sheet would you like to open? ")
             spreadsheet = workbook.get_sheet(sheet_name)
             print(f"You're in {sheet_name} sheet. Type 'help' for options, or start editing.")
         elif command.startswith("rename"):
+
             workbook.print_list()
             sheet_name = input("which sheet would you like to rename? ")
             while sheet_name not in workbook.list_sheets():
@@ -96,6 +122,7 @@ def main():
             workbook.rename_sheet(sheet_name, new_name)
             spreadsheet = workbook.get_sheet(new_name)
             print(f"You're in {new_name} sheet. Type 'help' for options, or start editing.")
+
         elif command.startswith("change"):
             workbook.print_list()
             new_name = input("which sheet would you like to get into? ")
@@ -105,6 +132,7 @@ def main():
                                  "which sheet would you like to open? ")
             spreadsheet = workbook.get_sheet(new_name)
             print(f"You're in {new_name} sheet. Type 'help' for options, or start editing.")
+
         elif command.startswith("remove sheet"):
             workbook.print_list()
             sheet_name = input("which sheet would you like to remove? ")
@@ -112,14 +140,6 @@ def main():
                 workbook.print_list()
                 sheet_name = input("name did not found..."
                                  "which sheet would you like to remove? ")
-
-
-
-
-
-
-
-
 
 
 
