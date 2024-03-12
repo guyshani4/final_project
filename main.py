@@ -42,16 +42,16 @@ def main():
             print("  - rename - if you want to rename a sheet")
             print("  - change sheet - if you want to rename a sheet")
             print("  - remove sheet - if you want to removes a sheet")
+            print("  - open [json file] - if you want to open a workbook from a file")
 
         elif command.lower() == "save":
             print("You can save the spreadsheet in the following formats:")
             print("  - csv")
-            print("  - excel")
             print("  - pdf")
             print("  - json")
             save_format = input("Please enter the format you want to save the spreadsheet in: ")
-            while save_format not in ["csv", "excel", "pdf", "json"]:
-                save_format = input("Invalid format. Please enter either 'csv', 'excel', 'pdf', or 'json'.")
+            while save_format not in ["csv", "pdf", "json"]:
+                save_format = input("Invalid format. Please enter either 'csv', 'pdf', or 'json'.")
             filename = input("Please enter the filename: ")
             exporter = WorkbookExporter(spreadsheet)
             if save_format.lower() == "csv":
@@ -62,7 +62,6 @@ def main():
                 exporter.export_to_json(filename)
             else:
                 print("Invalid format. Please enter either 'csv', 'pdf', or 'json'.")
-
 
 
         elif command.startswith("set "):
@@ -111,8 +110,8 @@ def main():
             sheet_name = input("which sheet would you like to open? ")
             spreadsheet = workbook.get_sheet(sheet_name)
             print(f"You're in {sheet_name} sheet. Type 'help' for options, or start editing.")
-        elif command.startswith("rename"):
 
+        elif command.startswith("rename"):
             workbook.print_list()
             sheet_name = input("which sheet would you like to rename? ")
             while sheet_name not in workbook.list_sheets():
@@ -140,6 +139,16 @@ def main():
                 workbook.print_list()
                 sheet_name = input("name did not found..."
                                    "which sheet would you like to remove? ")
+
+        elif command.startswith("open"):
+            filename = input("Enter the name of the file you want to open: ")
+            try:
+                workbook = Workbook.load_and_open_workbook(filename)
+                print(f"Opened {filename} successfully.")
+            except Exception as err:
+                print(f"Error: {str(err)}")
+                continue
+            print(f"You're in {spreadsheet.name} sheet. Type 'help' for options, or start editing.")
 
 
 
