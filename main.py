@@ -38,7 +38,7 @@ def main():
             print("  - sheets - if you want to see the sheet's list and choose which sheet to open")
             print("  - rename - if you want to rename a sheet")
             print("  - change sheet - if you want to rename a sheet")
-
+            print("  - remove sheet - if you want to removes a sheet")
 
 
 
@@ -52,7 +52,6 @@ def main():
                 continue
             if spreadsheet.cells != {}:
                 print(spreadsheet)
-
 
         elif command.startswith("formula "):
             try:
@@ -98,14 +97,24 @@ def main():
             spreadsheet = workbook.get_sheet(new_name)
             print(f"You're in {new_name} sheet. Type 'help' for options, or start editing.")
         elif command.startswith("change"):
-            new_name = input("which sheet would you like to get into? ")
             workbook.print_list()
+            new_name = input("which sheet would you like to get into? ")
             while new_name not in workbook.list_sheets():
+                workbook.print_list()
                 new_name = input("name did not found..."
-                                 "which sheet would you like to get into? ")
-
+                                 "which sheet would you like to open? ")
             spreadsheet = workbook.get_sheet(new_name)
             print(f"You're in {new_name} sheet. Type 'help' for options, or start editing.")
+        elif command.startswith("remove sheet"):
+            workbook.print_list()
+            sheet_name = input("which sheet would you like to remove? ")
+            while sheet_name not in workbook.list_sheets():
+                workbook.print_list()
+                sheet_name = input("name did not found..."
+                                 "which sheet would you like to remove? ")
+
+
+
 
 
 
