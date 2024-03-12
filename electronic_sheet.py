@@ -1,4 +1,5 @@
 import json
+import math
 from typing import *
 LETTERS_NUM = 26
 
@@ -171,8 +172,11 @@ class Spreadsheet:
         # If updating a cell with a formula, parse the formula to identify dependencies
         if formula:
             if len(formula) >= 5:
-                cells = self.valid_cells_index(formula)
-                dependencies = self.get_range_cells(cells[0], cells[1])
+                if formula.startswith("SQRT"):
+                    dependencies = [formula[5:-1]]
+                else:
+                    cells = self.valid_cells_index(formula)
+                    dependencies = self.get_range_cells(cells[0], cells[1])
             else:
                 dependencies = [formula[:2]]
             for dep_name in dependencies:
@@ -228,7 +232,7 @@ class Spreadsheet:
         :return: the answer of the formula. if the formula doesnt meet the string requirements, None.
         """
         parts = []
-        for index,sign in enumerate(formula):
+        for index, sign in enumerate(formula):
             if sign in ['*', '/', '+', '-']:
                 parts = [formula[:index], sign, formula[index+1]]
         if len(parts) == 3:
@@ -304,7 +308,17 @@ class Spreadsheet:
             except Exception as err:
                 print(f"Error: {str(err)}")
                 return
+        if formula.startswith("SQRT"):
+            try:
+                formula = formula[5:-1]
+                return math.sqrt(float(self.get_cell_value(formula)))
+            except Exception as err:
+                print(f"Error: {str(err)}")
+                return
         return self.regular_formula(formula)
+
+
+
 
 
 

@@ -29,10 +29,11 @@ def main():
             print("  - set [cell] [value] - Set the value of a cell (value can be a number or a string).")
             print("  - formula [cell] [formula] - Set the formula for a cell and updates its value.\n"
                   "             PAY ATTENTION! the formulas should be combination of numbers and cells only.\n"
-                  "             there are 4 special formulas: 'AVERAGE' 'MIN' 'MAX' 'SUM'. \n             "
+                  "             there are 4 special formulas: 'AVERAGE' 'MIN' 'MAX' 'SUM' 'SQRT'. \n             "
                   "these formulas should be typed in a specific form. \n"
                   "             for example: MAX(A1:B2) is correct and will set"
-                  "the maximum number in the range of A1 and B2 ")
+                  "the maximum number in the range of A1 and B2. \n "
+                  "             for SQRT operator a valid form: SQRT(A1). \n")
             print("  - get [cell] - Get the value of a cell. if not exists, print '-'.")
             print("  - quit - Exit the program with option to save.")
             print("  - show - shows the spreadsheet in an organized table")
