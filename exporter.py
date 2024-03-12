@@ -1,5 +1,4 @@
 import csv, json
-from openpyxl import Workbook
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 
@@ -15,20 +14,6 @@ class WorkbookExporter:
         self.workbook = workbook
 
     # ... other methods ...
-
-    def export_to_excel(self, filename):
-        """
-        Exports the workbook to an Excel file.
-        :param filename: The name of the Excel file to be created.
-        """
-        for sheet_name, spreadsheet in self.workbook.sheets.items():
-            wb = Workbook()
-            ws = wb.active
-            for i in range(1, spreadsheet.max_row + 1):
-                for j in range(1, spreadsheet.max_col_index + 1):
-                    cell_value = spreadsheet.get_cell_value(f"{spreadsheet.col_index_to_letter(j)}{i}")
-                    ws.cell(row=i, column=j, value=cell_value)
-            wb.save(f"{filename}_{sheet_name}.xlsx")
 
 
     def export_to_json(self, filename):

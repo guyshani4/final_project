@@ -50,18 +50,18 @@ def main():
             print("  - pdf")
             print("  - json")
             save_format = input("Please enter the format you want to save the spreadsheet in: ")
+            while save_format not in ["csv", "excel", "pdf", "json"]:
+                save_format = input("Invalid format. Please enter either 'csv', 'excel', 'pdf', or 'json'.")
             filename = input("Please enter the filename: ")
             exporter = WorkbookExporter(spreadsheet)
             if save_format.lower() == "csv":
                 exporter.export_to_csv(filename)
-            elif save_format.lower() == "excel":
-                exporter.export_to_excel(filename)
             elif save_format.lower() == "pdf":
                 exporter.export_to_pdf(filename)
             elif save_format.lower() == "json":
                 exporter.export_to_json(filename)
             else:
-                print("Invalid format. Please enter either 'csv', 'excel', 'pdf', or 'json'.")
+                print("Invalid format. Please enter either 'csv', 'pdf', or 'json'.")
 
 
 
@@ -139,7 +139,7 @@ def main():
             while sheet_name not in workbook.list_sheets():
                 workbook.print_list()
                 sheet_name = input("name did not found..."
-                                 "which sheet would you like to remove? ")
+                                   "which sheet would you like to remove? ")
 
 
 
