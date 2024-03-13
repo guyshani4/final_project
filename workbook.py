@@ -1,5 +1,7 @@
 from electronic_sheet import *
-
+import csv, json
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
 
 class Workbook:
     """
@@ -7,11 +9,12 @@ class Workbook:
     similar to a workbook in Excel containing multiple sheets.
     """
 
-    def __init__(self):
+    def __init__(self, name = None):
         """
         Initializes a new workbook with an empty dictionary of sheets.
         """
         self.sheets = {}
+        self.name = name
 
     def add_sheet(self, sheet_name):
         """
@@ -93,3 +96,42 @@ class Workbook:
             spreadsheet.load(sheet_data)
             self.sheets[sheet_name] = spreadsheet
         return self
+
+    def save_workbook(self, filename):
+        """
+        Saves the workbook to a file in JSON format.
+        :param filename: The name of the file to save the workbook to.
+        """
+        workbook_dict = {name: sheet.to_dict() for name, sheet in self.sheets.items()}
+        with open(filename, 'w') as f:
+            json.dump(workbook_dict, f)
+
+
+    def export_to_pdf(self, filename):
+        """
+        Exports the workbook to a PDF file.
+        :param filename: The name of the PDF file to be created.
+        """
+        for sheet_name, spreadsheet in self.sheets.items():
+            c = canvas.Canvas(f"{filename}_{sheet_name}.pdf", pagesize=letter)
+            width, height = letter
+            for i in range(1, spreadsheet.max_row() + 1):
+                for j in range(1, spreadsheet.max_col_index() + 1):
+                    cell_value = spreadsheet.get_cell_value(f"{spreadsheet.col_index_to_letter(j)}{i}")
+                    c.drawString(10 + j*50, height - i*30, str(cell_value))
+            c.save()
+
+
+    def export_to_csv(self, filename):
+        """
+        Exports the workbook to a CSV file.
+        :param filename: The name of the CSV file to be created.
+        """
+        for spreadsheet in self.sheets:
+            with open(f"{filename}_{spreadsheet.name}.csv", 'w', newline='') as f:
+                writer = csv.writer(f)
+                for i in range(1, spreadsheet.max_col_index() + 1):
+                    row = [spreadsheet.get_cell_value(f"{spreadsheet.col_index_to_letter(j)}{i}")
+                           for j in range(1, spreadsheet.max_col() + 1)]
+                    writer.writerow(row)
+

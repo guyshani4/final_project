@@ -4,23 +4,48 @@ from exporter import *
 import curses
 from curses import wrapper
 
-def main():
+def get_spreadsheet():
     workbook = Workbook()
-    print("Welcome to the your WorkBook! first, you'll need to type the name of the first sheet in your project.")
-    sheet_name = input("type here: > ").strip()
-    workbook.add_sheet(sheet_name)
-    spreadsheet = workbook.get_sheet(sheet_name)
-    print(f"You're in {sheet_name} sheet. Type 'help' for options, or start editing.")
+    sheet_name = ""
+    decision1 = input("Welcome to WorkBook! would you like to load an existing workbook, or start a new one?\n"
+                      "type 'new' or 'open' to start: ")
+    while decision1 not in ["new", "open"]:
+        decision1 = input("not a valid command. type 'new' or 'open' to start: ")
+    if decision1.lower() == "open":
+        filename = ""
+        while filename == "":
+            filename = input("Enter the name of the file you want to open: ")
+            try:
+                workbook = Workbook.load_and_open_workbook(filename)
+                print(f"Opened {filename} successfully.")
+            except Exception as err:
+                print(f"Error: {str(err)}")
+                filename = ""
+    else:
+        print("Great! let's start a new workbook. ")
+        workbook_name = input("what would you like to call your workbook? ")
+        workbook = Workbook(workbook_name)
+        print("type the name of the first sheet in your project.")
+        sheet_name = input("type here: > ").strip()
+        workbook.add_sheet(sheet_name)
+        print(f"You're in {sheet_name} sheet. Type 'help' for options, or start editing.")
+    return workbook, workbook.get_sheet(sheet_name)
 
+
+def main():
+    workbook, spreadsheet = get_spreadsheet()
+    print("Type 'help' for options, or start editing.")
     while True:
         command = input("> ").strip()
         if command.lower() == "quit":
             if input("Are you sure you want to quit? ").lower() == "yes":
-                if input("Would you like to save the spreadsheet? ").lower() == "yes":
+                if input("Would you like to save the workbook? ").lower() == "yes":
                     filename = input("what file name? ")
-                    spreadsheet.save_as(filename)
+                    workbook.save_workbook(filename)
+                    print("exiting workbook... Bye!")
+                    break
                 else:
-                    print("exiting spreadsheet...")
+                    print("exiting workbook... Bye!")
                     break
             else:
                 continue
@@ -34,7 +59,7 @@ def main():
                   "             for example: MAX(A1:B2) is correct and will set"
                   "the maximum number in the range of A1 and B2. \n "
                   "             for SQRT operator a valid form: SQRT(A1). \n")
-            print("  - get [cell] - Get the value of a cell. if not exists, print '-'.")
+            print("  - details - Get the detailed version of the spreadsheet.")
             print("  - quit - Exit the program with option to save.")
             print("  - show - shows the spreadsheet in an organized table")
             print("  - remove [cell] - Removes the cell's value")
@@ -43,26 +68,28 @@ def main():
             print("  - rename - if you want to rename a sheet")
             print("  - change sheet - if you want to rename a sheet")
             print("  - remove sheet - if you want to removes a sheet")
-            print("  - open [json file] - if you want to open a workbook from a file")
+            print("  - save - if you want to save the workbook")
+            print("  - export - if you want to export the workbook to a different file type")
 
         elif command.lower() == "save":
-            print("You can save the spreadsheet in the following formats:")
+            filename = input("what file name? ")
+            workbook.save_workbook(filename)
+            print(f"Saved {filename} successfully.")
+
+        elif command.lower() == "export":
+            print("You can save the workbook in the following formats:")
             print("  - csv")
             print("  - pdf")
-            print("  - json")
             save_format = input("Please enter the format you want to save the spreadsheet in: ")
-            while save_format not in ["csv", "pdf", "json"]:
+            while save_format not in ["csv", "pdf"]:
                 save_format = input("Invalid format. Please enter either 'csv', 'pdf', or 'json'.")
             filename = input("Please enter the filename: ")
-            exporter = WorkbookExporter(spreadsheet)
             if save_format.lower() == "csv":
-                exporter.export_to_csv(filename)
+                workbook.export_to_csv(filename)
             elif save_format.lower() == "pdf":
-                exporter.export_to_pdf(filename)
-            elif save_format.lower() == "json":
-                exporter.export_to_json(filename)
+                workbook.export_to_pdf(filename)
             else:
-                print("Invalid format. Please enter either 'csv', 'pdf', or 'json'.")
+                print("Invalid format. Please enter either 'csv' or 'pdf'.")
 
 
         elif command.startswith("set "):
@@ -87,10 +114,8 @@ def main():
             if spreadsheet.cells != {}:
                 print(spreadsheet)
 
-        elif command.startswith("get "):
-            _, cell_name = command.split()
-            value = spreadsheet.get_cell_value(cell_name)
-            print(f"{cell_name}: {value if value is not None else '-'}")
+        elif command.startswith("details"):
+            print(spreadsheet.dict_print())
 
         elif command.startswith("show"):
             print(spreadsheet)
@@ -140,16 +165,6 @@ def main():
                 workbook.print_list()
                 sheet_name = input("name did not found..."
                                    "which sheet would you like to remove? ")
-
-        elif command.startswith("open"):
-            filename = input("Enter the name of the file you want to open: ")
-            try:
-                workbook = Workbook.load_and_open_workbook(filename)
-                print(f"Opened {filename} successfully.")
-            except Exception as err:
-                print(f"Error: {str(err)}")
-                continue
-            print(f"You're in {spreadsheet.name} sheet. Type 'help' for options, or start editing.")
 
 
 

@@ -44,12 +44,12 @@ class Spreadsheet:
     """
     Represents a spreadsheet page, similar to an Excel page.
     """
-    def __init__(self) -> None:
+    def __init__(self, sheet_name=None) -> None:
         """
         Initializes a new Spreadsheet instance with an empty dictionary of cells.
         """
         self.cells = {}
-        #self.name = sheet_name
+        self.name = sheet_name
 
     def is_valid_cell_name(self, cell_name: str) -> bool:
         """
@@ -205,6 +205,7 @@ class Spreadsheet:
             return self.cells[cell_name]
         return
 
+
     def get_cell_value(self, cell_name: str) -> Any:
         """
         Retrieves the evaluated value of a cell.
@@ -248,7 +249,6 @@ class Spreadsheet:
             except ValueError:
                 value2 = self.get_cell_value(side2)
             if value2 is None or value1 is None:
-                print("formula cannot be calculated.. value is not exist")
                 return
             # checks the operation
             if operation == '+':
@@ -521,6 +521,25 @@ class Spreadsheet:
             for dep_name in dependencies:
                 self.get_cell(dep_name).dependents.remove(cell_name)
         del self.cells[cell_name]
+
+
+    def max_row(self):
+        """
+        Returns the maximum row index that has been used in the spreadsheet.
+        """
+        if not self.cells:  # If there are no cells, return 0
+            return 0
+        rows = [int(cell.lstrip("ABCDEFGHIJKLMNOPQRSTUVWXYZ")) for cell in self.cells.keys()]
+        return max(rows)
+
+    def max_col_index(self):
+        """
+        Returns the maximum column index that has been used in the spreadsheet.
+        """
+        if not self.cells:
+            return 0
+        cols = [self.col_letter_to_index(cell.rstrip('0123456789')) for cell in self.cells.keys()]
+        return max(cols)
 
 """
 if __name__ == "__main__":
