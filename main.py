@@ -1,9 +1,5 @@
 from electronic_sheet import *
 from workbook import *
-from exporter import *
-import curses
-from curses import wrapper
-
 def get_spreadsheet():
     workbook = Workbook()
     sheet_name = ""
