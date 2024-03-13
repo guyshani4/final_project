@@ -541,14 +541,4 @@ class Spreadsheet:
         cols = [self.col_letter_to_index(cell.rstrip('0123456789')) for cell in self.cells.keys()]
         return max(cols)
 
-"""
-if __name__ == "__main__":
-    spread = Spreadsheet()
-    spread.set_cell("A1", 50)
-    spread.set_cell("A3", 10)
-    spread.set_cell("B1", formula="A1/2")
-    spread.set_cell("B2", formula="SUM(A1:A3)")
-    print(spread)
-
-"""
 
