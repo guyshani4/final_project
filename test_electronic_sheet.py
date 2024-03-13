@@ -103,7 +103,6 @@ def test_regular_formula_valid():
     assert spreadsheet.regular_formula("A1 + A2") == 30
     assert spreadsheet.regular_formula("20 / 4") == 5
 
-
 def test_regular_formula_unsupported_operation():
     ss = Spreadsheet()
     with patch.object(ss, 'get_cell_value', side_effect=[6, 3]):

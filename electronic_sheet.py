@@ -532,6 +532,7 @@ class Spreadsheet:
         rows = [int(cell.lstrip("ABCDEFGHIJKLMNOPQRSTUVWXYZ")) for cell in self.cells.keys()]
         return max(rows)
 
+
     def max_col_index(self):
         """
         Returns the maximum column index that has been used in the spreadsheet.
