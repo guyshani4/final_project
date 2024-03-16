@@ -160,6 +160,23 @@ class Spreadsheet:
             print(f"Invalid cell name '{cell_name}'." 
                   f" Cell names must be in the format 'A1', 'B2', 'AZ10' etc.")
             return
+        # making sure the formula does not call the cell_name and make a recursive call
+        if formula:
+            if len(formula) >=5:
+                if formula.startswith("SQRT"):
+                    dependencies = [formula[5:-1]]
+                else:
+                    cells = self.valid_cells_index(formula)
+                    dependencies = self.get_range_cells(cells[0], cells[1])
+                if cell_name in dependencies:
+                    print("The cell cannot be dependent on itself.")
+                    return
+            else:
+                dependencies = [formula[:2]]
+                if cell_name in dependencies:
+                    print("The cell cannot be dependent on itself.")
+                    return
+
         # Ensure the cell exists in the dictionary; if not, create a new one
         if cell_name not in self.cells:
             self.cells[cell_name] = Cell()
@@ -177,8 +194,14 @@ class Spreadsheet:
                 else:
                     cells = self.valid_cells_index(formula)
                     dependencies = self.get_range_cells(cells[0], cells[1])
+                if cell_name in dependencies:
+                    print("The cell cannot be dependent on itself.")
+                    return
             else:
                 dependencies = [formula[:2]]
+                if cell_name in dependencies:
+                    print("The cell cannot be dependent on itself.")
+                    return
             for dep_name in dependencies:
                 if dep_name not in self.cells:
                     self.cells[dep_name] = Cell()
@@ -316,9 +339,6 @@ class Spreadsheet:
                 print(f"Error: {str(err)}")
                 return
         return self.regular_formula(formula)
-
-
-
 
 
 
