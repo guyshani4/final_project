@@ -250,7 +250,7 @@ class Spreadsheet:
         try:
             cell.set_value(float(value))
         except:
-            pass
+            cell.value = value
 
     def set_cell_formula(self, cell, cell_name, formula):
         if self.is_valid_cell_name(formula):  # If the formula is just a cell name
