@@ -106,7 +106,7 @@ class Spreadsheet:
 
         return "{\n  " + ",\n  ".join(cell_strings) + "\n}"
 
-    def __str__(self) -> str:
+    def __str__(self) -> Any:
         """
         Generates a string representation of the spreadsheet in a table format.
         This method creates a visual table where each cell is aligned in columns and rows,
@@ -130,10 +130,13 @@ class Spreadsheet:
         max_col_index = 0
         max_row = 0
         for cell_name in self.cells.keys():
-            col, row = cell_name.rstrip('0123456789'), int(cell_name.lstrip("ABCDEFGHIJKLMNOPQRSTUVWXYZ"))
-            col_index = self.col_letter_to_index(col)
-            max_col_index = max(max_col_index, col_index)
-            max_row = max(max_row, row)
+            try:
+                col, row = cell_name.rstrip('0123456789'), int(cell_name.lstrip("ABCDEFGHIJKLMNOPQRSTUVWXYZ"))
+                col_index = self.col_letter_to_index(col)
+                max_col_index = max(max_col_index, col_index)
+                max_row = max(max_row, row)
+            except:
+                continue
 
         # Generate column headers
         col_headers = [self.col_index_to_letter(i) for i in range(max_col_index + 1)]
@@ -161,8 +164,14 @@ class Spreadsheet:
                   f" Cell names must be in the format 'A1', 'B2', 'AZ10' etc.")
             return
         # making sure the formula does not call the cell_name and make a recursive call
+        dependencies = []
         if formula:
-            if len(formula) >=5:
+            if self.is_valid_cell_name(formula):  # If the formula is just a cell name
+                if formula == cell_name:
+                    print("The cell cannot be dependent on itself.")
+                    return
+                pass
+            elif len(formula) >= 5:
                 if formula.startswith("SQRT"):
                     dependencies = [formula[5:-1]]
                 else:
@@ -188,7 +197,12 @@ class Spreadsheet:
 
         # If updating a cell with a formula, parse the formula to identify dependencies
         if formula:
-            if len(formula) >= 5:
+            if self.is_valid_cell_name(formula):  # If the formula is just a cell name
+                referenced_cell = self.get_cell(formula)
+                if referenced_cell:
+                    cell.value = referenced_cell.value
+                    dependencies = [formula]
+            elif len(formula) >= 5:
                 if formula.startswith("SQRT"):
                     dependencies = [formula[5:-1]]
                 else:
@@ -221,8 +235,6 @@ class Spreadsheet:
         :return: The Cell object if found, None otherwise.
         """
         if not self.is_valid_cell_name(cell_name):
-            print(f"Invalid cell name '{cell_name}'."
-                  f" Cell names must be in the format 'A1', 'B2', 'AZ10' etc.")
             return
         if cell_name in self.cells:
             return self.cells[cell_name]
@@ -255,6 +267,8 @@ class Spreadsheet:
         :param formula: a string with the formula
         :return: the answer of the formula. if the formula doesnt meet the string requirements, None.
         """
+        if self.is_valid_cell_name(formula):
+            return self.get_cell_value(formula)
         parts = []
         for index, sign in enumerate(formula):
             if sign in ['*', '/', '+', '-']:
@@ -334,7 +348,8 @@ class Spreadsheet:
         if formula.startswith("SQRT"):
             try:
                 formula = formula[5:-1]
-                return math.sqrt(float(self.get_cell_value(formula)))
+                value = float(self.get_cell_value(formula))
+                return math.sqrt(value)
             except Exception as err:
                 print(f"Error: {str(err)}")
                 return
@@ -435,29 +450,6 @@ class Spreadsheet:
             except Exception as err:
                 print(f"Error: {str(err)}")
         return
-
-    def get_raw_value(self, cell_name: str) -> Any:
-        """
-        Retrieves the raw value of a cell without evaluating its formula.
-        :param cell_name: The name of the cell to retrieve the value from.
-        :return: The value of the cell.
-        :If the cell is empty, has an invalid value, or does not exist, the function
-        return None and prints a message to the user.
-        """
-        if not self.is_valid_cell_name(cell_name):
-            print(f"Invalid cell name '{cell_name}'."
-                  f" Cell names must be in the format 'A1', 'B2', 'AZ10' etc.")
-            return
-        cell = self.get_cell(cell_name)
-        if cell:
-            if cell.value is not None:
-                return cell.value
-            else:
-                print(f"Cell {cell_name} is empty or has an invalid value.")
-                return
-        else:
-            print(f"Cell {cell_name} does not exist in the spreadsheet.")
-            return
 
 
     def col_letter_to_index(self, col: str) -> int:
