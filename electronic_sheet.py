@@ -157,7 +157,7 @@ class Spreadsheet:
             rows.append(' '.join(row_cells))
 
         return '\n'.join(rows)
-
+    """
     def set_cell(self, cell_name, value=None, formula=None):
         if not self.is_valid_cell_name(cell_name):
             print(f"Invalid cell name '{cell_name}'." 
@@ -226,6 +226,60 @@ class Spreadsheet:
             cell.set_value(float(value))
         except:
             pass
+    """
+
+
+    def set_cell(self, cell_name, value=None, formula=None):
+        if not self.is_valid_cell_name(cell_name):
+            print(f"Invalid cell name '{cell_name}'."
+                  f" Cell names must be in the format 'A1', 'B2', 'AZ10' etc.")
+            return
+
+        # Ensure the cell exists in the dictionary; if not, create a new one
+        if cell_name not in self.cells:
+            self.cells[cell_name] = Cell()
+
+        # Update the cell's value or formula
+        cell = self.cells[cell_name]
+        if value is not None:
+            self.set_cell_value(cell, value)
+        if formula is not None:
+            self.set_cell_formula(cell, cell_name, formula)
+
+    def set_cell_value(self, cell, value):
+        try:
+            cell.set_value(float(value))
+        except:
+            pass
+
+    def set_cell_formula(self, cell, cell_name, formula):
+        if self.is_valid_cell_name(formula):  # If the formula is just a cell name
+            referenced_cell = self.get_cell(formula)
+            if formula == cell_name:
+                print("The cell cannot be dependent on itself.")
+                return
+            if referenced_cell:
+                cell.value = referenced_cell.value
+                cell.formula = formula
+                cell.dependencies = [formula]
+        else:
+            if len(formula) >= 5:
+                if formula.startswith("SQRT"):
+                    dependencies = [formula[5:-1]]
+                else:
+                    cells = self.valid_cells_index(formula)
+                    dependencies = self.get_range_cells(cells[0], cells[1])
+            else:
+                dependencies = [formula[:2]]
+            if cell_name in dependencies:
+                print("The cell cannot be dependent on itself.")
+                return
+            for dep_name in dependencies:
+                if dep_name not in self.cells:
+                    self.cells[dep_name] = Cell()
+                self.cells[dep_name].add_dependent(cell_name)
+            cell.formula = formula
+            cell.value = cell.calculated_value(self)
 
 
     def get_cell(self, cell_name: str) -> Optional[Cell]:
