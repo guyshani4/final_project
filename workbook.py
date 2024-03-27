@@ -24,7 +24,7 @@ class Workbook:
         if sheet_name in self.sheets:
             print(f"Sheet '{sheet_name}' already exists.")
         else:
-            self.sheets[sheet_name] = Spreadsheet()
+            self.sheets[sheet_name] = Spreadsheet(sheet_name)
             print(f"Sheet '{sheet_name}' added to the workbook.")
 
     def remove_sheet(self, sheet_name):
@@ -74,14 +74,16 @@ class Workbook:
             self.sheets[new_name] = self.sheets.pop(old_name)
             print(f"Sheet '{old_name}' has been renamed to '{new_name}'.")
 
+    def to_dict(self):
+        return {sheet_name: sheet.to_dict() for sheet_name, sheet in self.sheets.items()}
+
     def save_workbook(self, filename):
-        """
-        Saves the workbook to a file in JSON format.
-        :param filename: The name of the file to save the workbook to.
-        """
-        workbook_dict = {name: sheet.to_dict() for name, sheet in self.sheets.items()}
+        workbook_dict = self.to_dict()
         with open(filename, 'w') as f:
             json.dump(workbook_dict, f)
+
+    def dict_print(self) -> str:
+        print(self.to_dict())
 
     def load_and_open_workbook(self, filename):
         """

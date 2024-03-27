@@ -7,7 +7,7 @@ def get_spreadsheet():
     sheet_name = ""
     decision1 = input("Welcome to WorkBook! would you like to load an existing workbook, or start a new one?\n"
                       "type 'new' or 'open' to start: ")
-    while decision1 not in ["new", "open"]:
+    while decision1.lower() not in ["new", "open"]:
         decision1 = input("not a valid command. type 'new' or 'open' to start: ")
     if decision1.lower() == "open":
         filename = ""
@@ -30,25 +30,7 @@ def get_spreadsheet():
     return workbook, workbook.get_sheet(sheet_name)
 
 
-def main():
-    workbook, spreadsheet = get_spreadsheet()
-    print("Type 'help' for options, or start editing.")
-    while True:
-        command = input("> ").strip()
-        if command.lower() == "quit":
-            if input("Are you sure you want to quit? ").lower() == "yes":
-                if input("Would you like to save the workbook? ").lower() == "yes":
-                    filename = input("what file name? ")
-                    workbook.save_workbook(filename)
-                    print("exiting workbook... Bye!")
-                    break
-                else:
-                    print("exiting workbook... Bye!")
-                    break
-            else:
-                continue
-        if command.lower() == "help":
-            help_text = """
+help_text = """
                 The Optional Commands:
                   - set [cell] [value] - Set the value of a cell (value can be a number or a string).
                   - set [cell] [formula] - Set the formula for a cell and updates its value.
@@ -69,7 +51,27 @@ def main():
                   - remove sheet - if you want to removes a sheet
                   - save - if you want to save the workbook
                   - export - if you want to export the workbook to a different file type
-                """
+            """
+
+
+def main():
+    workbook, spreadsheet = get_spreadsheet()
+    print("Type 'help' for options, or start editing.")
+    while True:
+        command = input("> ").strip()
+        if command.lower() == "quit":
+            if input("Are you sure you want to quit? ").lower() == "yes":
+                if input("Would you like to save the workbook? ").lower() == "yes":
+                    filename = input("what file name? ")
+                    workbook.save_workbook(filename)
+                    print("exiting workbook... Bye!")
+                    break
+                else:
+                    print("exiting workbook... Bye!")
+                    break
+            else:
+                continue
+        if command.lower() == "help":
             print(help_text)
             continue
 
@@ -93,7 +95,7 @@ def main():
                 workbook.export_to_pdf(filename)
             continue
 
-        if command.startswith("set "):
+        if command.lower().startswith("set"):
             try:
                 _, cell_name, value = command.split(maxsplit=2)
                 if not value.startswith("="):
@@ -102,42 +104,40 @@ def main():
                     formula = value[1:]
                     spreadsheet.set_cell(cell_name, formula=formula)
             except Exception as err:
-                print("oops. not a valid command")
-                print(f"Error: {str(err)}")
                 continue
             if spreadsheet.cells != {}:
                 print(spreadsheet)
             continue
 
-        if command.startswith("details"):
-            print(spreadsheet.dict_print())
+        if command.lower().startswith("details"):
+            print(workbook.dict_print())
             continue
 
-        if command.startswith("show"):
+        if command.lower() == "show":
             print(spreadsheet)
             continue
 
-        if command.startswith("remove"):
+        if command.lower() == "remove":
             _, cell_name = command.split(maxsplit=1)
             spreadsheet.remove_cell(cell_name)
             print(spreadsheet)
             continue
 
-        if command.startswith("new"):
+        if command.lower() == "new":
             sheet_name = input("name the new sheet: ")
             workbook.add_sheet(sheet_name)
             spreadsheet = workbook.get_sheet(sheet_name)
             print(f"You're in {sheet_name} sheet. Type 'help' for options, or start editing.")
             continue
 
-        if command.startswith("sheets"):
+        if command.lower() == "sheets":
             print(workbook.list_sheets())
             sheet_name = input("which sheet would you like to open? ")
             spreadsheet = workbook.get_sheet(sheet_name)
             print(f"You're in {sheet_name} sheet. Type 'help' for options, or start editing.")
             continue
 
-        if command.startswith("rename"):
+        if command.lower() == "rename":
             workbook.print_list()
             sheet_name = input("which sheet would you like to rename? ")
             while sheet_name not in workbook.list_sheets():
@@ -149,7 +149,7 @@ def main():
             print(f"You're in {new_name} sheet. Type 'help' for options, or start editing.")
             continue
 
-        if command.startswith("change"):
+        if command.lower() == "change":
             workbook.print_list()
             new_name = input("which sheet would you like to get into? ")
             while new_name not in workbook.list_sheets():
@@ -160,7 +160,7 @@ def main():
             print(f"You're in {new_name} sheet.")
             continue
 
-        if command.startswith("remove sheet"):
+        if command.lower() == "remove sheet":
             workbook.print_list()
             sheet_name = input("which sheet would you like to remove? ")
             while sheet_name not in workbook.list_sheets():
@@ -169,7 +169,7 @@ def main():
                                    "which sheet would you like to remove? ")
             workbook.remove_sheet(sheet_name)
             spreadsheet = workbook.get_sheet
-            if workbook.list_sheets() != []:
+            if workbook.list_sheets():
                 sheet_name = workbook.list_sheets()[0]
                 spreadsheet = workbook.get_sheet(sheet_name)
                 print(f"You're in {sheet_name} sheet.")

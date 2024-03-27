@@ -1,4 +1,4 @@
-import json
+import json, re
 import math
 from typing import *
 LETTERS_NUM = 26
@@ -16,7 +16,7 @@ class Cell:
         """
         self.value = value
         self.formula = formula
-        self.dependents = set()  # Cells that depend on this cell
+        self.dependents = set() # Cells that depend on this cell
 
     def add_dependent(self, cell_name):
         self.dependents.add(cell_name)
@@ -38,6 +38,13 @@ class Cell:
 
     def set_value(self, value):
         self.value = value
+
+    def to_dict(self):
+        return {
+            'value': self.value,
+            'formula': self.formula,
+            'dependents': list(self.dependents)
+        }
 
 
 class Spreadsheet:
@@ -82,29 +89,6 @@ class Spreadsheet:
 
         return False
 
-    def dict_print(self) -> str:
-        """
-        set a string representation of the spreadsheet.
-        For cells with formulas, both the formula and its evaluated value are displayed.
-        For cells without formulas, only the value is displayed.
-        If the spreadsheet is empty, a message indicating that is returned.
-        :return str: The formatted string representation of the spreadsheet's contents
-        """
-        if not self.cells:
-            print("the spreadsheet is empty.")
-            return ""
-
-        cell_strings = []
-        for cell_name, cell in self.cells.items():
-            if cell.formula:
-                # Assuming a method exists to evaluate the formula and get its value
-                evaluated_value = self.evaluate_formula(cell.formula)
-                cell_info = f"{cell_name}: {evaluated_value} (Formula: {cell.formula})"
-            else:
-                cell_info = f"{cell_name}: {cell.value}"
-            cell_strings.append(cell_info)
-
-        return "{\n  " + ",\n  ".join(cell_strings) + "\n}"
 
     def __str__(self) -> Any:
         """
@@ -157,77 +141,6 @@ class Spreadsheet:
             rows.append(' '.join(row_cells))
 
         return '\n'.join(rows)
-    """
-    def set_cell(self, cell_name, value=None, formula=None):
-        if not self.is_valid_cell_name(cell_name):
-            print(f"Invalid cell name '{cell_name}'." 
-                  f" Cell names must be in the format 'A1', 'B2', 'AZ10' etc.")
-            return
-        # making sure the formula does not call the cell_name and make a recursive call
-        dependencies = []
-        if formula:
-            if self.is_valid_cell_name(formula):  # If the formula is just a cell name
-                if formula == cell_name:
-                    print("The cell cannot be dependent on itself.")
-                    return
-                pass
-            elif len(formula) >= 5:
-                if formula.startswith("SQRT"):
-                    dependencies = [formula[5:-1]]
-                else:
-                    cells = self.valid_cells_index(formula)
-                    dependencies = self.get_range_cells(cells[0], cells[1])
-                if cell_name in dependencies:
-                    print("The cell cannot be dependent on itself.")
-                    return
-            else:
-                dependencies = [formula[:2]]
-                if cell_name in dependencies:
-                    print("The cell cannot be dependent on itself.")
-                    return
-
-        # Ensure the cell exists in the dictionary; if not, create a new one
-        if cell_name not in self.cells:
-            self.cells[cell_name] = Cell()
-
-        # Update the cell's value or formula
-        cell = self.cells[cell_name]
-        cell.value = value
-        cell.formula = formula
-
-        # If updating a cell with a formula, parse the formula to identify dependencies
-        if formula:
-            if self.is_valid_cell_name(formula):  # If the formula is just a cell name
-                referenced_cell = self.get_cell(formula)
-                if referenced_cell:
-                    cell.value = referenced_cell.value
-                    dependencies = [formula]
-            elif len(formula) >= 5:
-                if formula.startswith("SQRT"):
-                    dependencies = [formula[5:-1]]
-                else:
-                    cells = self.valid_cells_index(formula)
-                    dependencies = self.get_range_cells(cells[0], cells[1])
-                if cell_name in dependencies:
-                    print("The cell cannot be dependent on itself.")
-                    return
-            else:
-                dependencies = [formula[:2]]
-                if cell_name in dependencies:
-                    print("The cell cannot be dependent on itself.")
-                    return
-            for dep_name in dependencies:
-                if dep_name not in self.cells:
-                    self.cells[dep_name] = Cell()
-                # Add the current cell as a dependent to each cell it references
-                self.cells[dep_name].add_dependent(cell_name)
-                cell.set_value(cell.calculated_value(self))
-        try:
-            cell.set_value(float(value))
-        except:
-            pass
-    """
-
 
     def set_cell(self, cell_name, value=None, formula=None):
         if not self.is_valid_cell_name(cell_name):
@@ -541,6 +454,7 @@ class Spreadsheet:
         :param end: The ending cell name of the range.
         :return List[str]: A list of cell names within the specified range.
         """
+        """
         # Separates the letters and digits in each cell
         start_col = [letter for letter in start if letter.isalpha()]
         end_col = [letter for letter in end if letter.isalpha()]
@@ -549,6 +463,14 @@ class Spreadsheet:
         # Translates the col index into an integer
         start_col_index = self.col_letter_to_index(start_col[0])
         end_col_index = self.col_letter_to_index(end_col[0])
+        """
+        # Use regular expressions to separate the letters and digits in each cell
+        start_col, start_row = re.match(r"([A-Z]+)([0-9]+)", start).groups()
+        end_col, end_row = re.match(r"([A-Z]+)([0-9]+)", end).groups()
+
+        # Translates the col index into an integer
+        start_col_index = self.col_letter_to_index(start_col)
+        end_col_index = self.col_letter_to_index(end_col)
 
         if start_col_index > end_col_index or start_row > end_row:
             print(f"Invalid cells range. '{end}' comes after '{start}")
@@ -556,7 +478,7 @@ class Spreadsheet:
         # Creates the list of all the indexes as strings.
         cells = []
         for col in range(start_col_index, end_col_index + 1):
-            for row in range(int(int(start_row[0])), int(int(end_row[0])) + 1):
+            for row in range(int(start_row), int(end_row) + 1):
                 col_letter = self.col_index_to_letter(col)
                 cell_name = f"{col_letter}{row}"
                 cells.append(cell_name)
@@ -607,5 +529,10 @@ class Spreadsheet:
             return 0
         cols = [self.col_letter_to_index(cell.rstrip('0123456789')) for cell in self.cells.keys()]
         return max(cols)
+
+    def to_dict(self):
+        return {
+            cell_name: cell.to_dict() for cell_name, cell in self.cells.items()
+        }
 
 
