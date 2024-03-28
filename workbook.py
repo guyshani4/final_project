@@ -1,5 +1,5 @@
 from electronic_sheet import *
-import csv, json
+import csv, json, xlsxwriter
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 
@@ -106,30 +106,48 @@ class Workbook:
 
     def export_to_pdf(self, filename):
         """
-        Exports the workbook to a PDF file.
+        Exports the workbook to a PDF file, with a table-like appearance including grid lines and row numbers.
         :param filename: The name of the PDF file to be created.
         """
         for sheet_name, spreadsheet in self.sheets.items():
             c = canvas.Canvas(f"{filename}_{sheet_name}.pdf", pagesize=letter)
             width, height = letter
-            # Increased x_offset for more space from the left border
-            x_offset = 50  # Increased offset for better visibility of the first column
-            y_offset = 70  # Adjusted for aesthetic spacing from the top
 
-            # Adjusted column spacing for a prettier layout
-            column_spacing = 60  # Increase if your columns are too close to each other
+            # Configuration for aesthetics
+            x_offset = 60  # Adjusted to provide space for row numbers
+            y_offset = 100
+            column_spacing = 80  # Adjust for cell content width
+            row_spacing = 20  # Adjust for cell content height
+            cell_height = 18  # Height of each cell row
 
-            # Adjusted row spacing for a prettier layout
-            row_spacing = 20  # Increase if your rows are too close to each other
+            # Draw table header for column names
+            col_headers = [spreadsheet.col_index_to_letter(i) for i in range(spreadsheet.max_col_index() + 1)]
+            c.setFont("Helvetica-Bold", 12)
+            for j, col_header in enumerate(col_headers, start=0):
+                x_position = x_offset + j * column_spacing
+                c.drawString(x_position, height - y_offset + row_spacing, col_header)
 
+            # Reset font for table content
+            c.setFont("Helvetica", 10)
+
+            # Draw cells, grid lines, and row numbers
             for i in range(1, spreadsheet.max_row() + 1):
+                # Draw row numbers
+                c.drawString(x_offset - 50, height - y_offset - i * row_spacing + (cell_height / 4), str(i))
+
                 for j in range(spreadsheet.max_col_index() + 1):
-                    cell_name = f"{spreadsheet.col_index_to_letter(j)}{i}"
+                    col_letter = spreadsheet.col_index_to_letter(j)
+                    cell_name = f"{col_letter}{i}"
                     cell_value = spreadsheet.get_cell_value(cell_name)
-                    if cell_value is not None:
-                        x_position = x_offset + j * column_spacing
-                        y_position = height - y_offset - i * row_spacing
-                        c.drawString(x_position, y_position, str(cell_value))
+                    cell_value_str = "-" if cell_value is None else str(cell_value)
+
+                    x_position = x_offset + j * column_spacing
+                    y_position = height - y_offset - i * row_spacing
+                    c.drawString(x_position, y_position, cell_value_str)
+
+                    # Drawing the grid line around the cell
+                    c.rect(x_position - 2, y_position - 2, column_spacing - 4, cell_height, fill=0)
+
             c.save()
 
     def export_to_csv(self, filename):
@@ -137,11 +155,29 @@ class Workbook:
         Exports the workbook to a CSV file.
         :param filename: The name of the CSV file to be created.
         """
-        for spreadsheet in self.sheets:
-            with open(f"{filename}_{spreadsheet.name}.csv", 'w', newline='') as f:
+        for sheet_name, spreadsheet in self.sheets.items():
+            with open(f"{filename}_{sheet_name}.csv", 'w', newline='') as f:
                 writer = csv.writer(f)
-                for i in range(1, spreadsheet.max_col_index() + 1):
+                for i in range(1, spreadsheet.max_row() + 1):
                     row = [spreadsheet.get_cell_value(f"{spreadsheet.col_index_to_letter(j)}{i}")
-                           for j in range(1, spreadsheet.max_col() + 1)]
+                           for j in range(1, spreadsheet.max_col_index() + 1)]
                     writer.writerow(row)
+
+    def export_to_excel(self, filename):
+        """
+        Exports the workbook to an Excel file.
+        :param filename: The name of the Excel file to be created.
+        """
+        workbook = xlsxwriter.Workbook(f"{filename}.xlsx")
+
+        for sheet_name, spreadsheet in self.sheets.items():
+            worksheet = workbook.add_worksheet(sheet_name)
+
+            for i in range(1, spreadsheet.max_row() + 1):
+                for j in range(spreadsheet.max_col_index() + 1):
+                    cell_name = f"{spreadsheet.col_index_to_letter(j)}{i}"
+                    cell_value = spreadsheet.get_cell_value(cell_name)
+                    worksheet.write(i - 1, j, cell_value)
+
+        workbook.close()
 
