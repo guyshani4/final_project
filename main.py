@@ -1,10 +1,8 @@
-from electronic_sheet import *
 from workbook import *
 
 
 def get_spreadsheet():
     workbook = Workbook()
-    sheet_name = ""
     decision1 = input("Welcome to WorkBook! would you like to load an existing workbook, or start a new one?\n"
                       "type 'new' or 'open' to start: ")
     while decision1.lower() not in ["new", "open"]:
@@ -12,13 +10,20 @@ def get_spreadsheet():
     if decision1.lower() == "open":
         filename = ""
         while filename == "":
-            filename = input("Enter the name of the file you want to open: ")
+            filename = input("Enter the file you want to open: ")
             try:
-                workbook = Workbook.load_and_open_workbook(filename)
+                workbook = load_and_open_workbook(filename)
                 print(f"Opened {filename} successfully.")
-            except Exception as err:
-                print(f"Error: {str(err)}")
+            except:
+                print("it seems like the file does not fit the requirements.")
                 filename = ""
+        workbook.print_list()
+        sheet_name = input("which sheet would you like to open? ")
+        while sheet_name not in workbook.list_sheets():
+            sheet_name = input("name did not found..."
+                               "which sheet would you like to open? ")
+        print(f"You're in {sheet_name} sheet. Type 'help' for options, or start editing.")
+
     else:
         print("Great! let's start a new workbook. ")
         workbook_name = input("what would you like to call your workbook? ")

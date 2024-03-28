@@ -46,6 +46,9 @@ class Cell:
             'dependents': list(self.dependents)
         }
 
+    def update_dependents(self, dependents):
+        self.dependents = set(dependents)
+
 
 class Spreadsheet:
     """
@@ -347,12 +350,10 @@ class Spreadsheet:
         :param end: The ending cell name of the range.
         :return: float: the minimum value in the range.
         """
-        try:
-            cell_names = self.cells_values_list(start, end)
+        cell_names = self.cells_values_list(start, end)
+        if cell_names:
             return min(cell_names)
-        except Exception as err:
-            print(f"Error: {str(err)}")
-            return
+        return
 
 
     def find_max(self, start: str, end: str) -> Any:
@@ -363,11 +364,9 @@ class Spreadsheet:
         :return: float: the maximum value in the range.
         """
         cell_names = self.cells_values_list(start, end)
-        try:
+        if cell_names:
             return max(cell_names)
-        except Exception as err:
-            print(f"Error: {str(err)}")
-            return
+        return
 
     def calculate_sum(self, start: str, end: str) -> Any:
         """

@@ -80,20 +80,6 @@ class Workbook:
     def dict_print(self):
         print(self.to_dict())
 
-    def load_and_open_workbook(self, filename):
-        """
-        Loads a workbook file and opens it for editing.
-        :param filename: The name of the workbook file to be opened.
-        :return: The loaded Workbook instance.
-        """
-        with open(filename, 'r') as f:
-            workbook_dict = json.load(f)
-
-        for sheet_name, sheet_data in workbook_dict.items():
-            spreadsheet = Spreadsheet()
-            spreadsheet.load(sheet_data)
-            self.sheets[sheet_name] = spreadsheet
-        return self
 
     def export_to_json(self, filename):
         """
@@ -180,4 +166,27 @@ class Workbook:
                     worksheet.write(i - 1, j, cell_value)
 
         workbook.close()
+
+def load_and_open_workbook(filename):
+    """
+    Loads a workbook file and opens it for editing.
+    :param filename: The name of the workbook file to be opened.
+    :return: The loaded Workbook instance.
+    """
+    with open(filename, 'r') as f:  # Open the JSON file
+        workbook_dict = json.load(f)  # Load the JSON file into a Python dictionary
+    workbook_name = filename.rsplit('.', 1)[0]  # Remove the .json extension from the filename
+    workbook = Workbook(workbook_name)  # Create a new Workbook object
+    for sheet_name, sheet_data in workbook_dict.items():  # Iterate over the dictionary
+        spreadsheet = Spreadsheet(sheet_name)  # Create a new Spreadsheet object for each sheet
+        for cell_name, cell_data in sheet_data.items():  # Iterate over the sheet data
+            value = cell_data.get('value')
+            formula = cell_data.get('formula')
+            dependents = cell_data.get('dependents', [])
+            cell = Cell(value=value, formula=formula)
+            cell.update_dependents(dependents)  # Update the cell's dependents
+            spreadsheet.cells[cell_name] = cell  # Set the cell in the Spreadsheet object
+        workbook.sheets[sheet_name] = spreadsheet  # Add the Spreadsheet object to the workbook
+
+    return workbook
 
