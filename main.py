@@ -1,11 +1,15 @@
+import sys
 from workbook import *
-import typing
 
 
 def get_spreadsheet() -> Tuple[Workbook, Spreadsheet]:
+    decision1 = ""
     workbook = Workbook()
-    decision1 = input("Welcome to WorkBook! would you like to load an existing workbook, or start a new one?\n"
-                      "type 'new' or 'open' to start: ")
+    try:
+        decision1 = input("Welcome to WorkBook! would you like to load an existing workbook, or start a new one?\n"
+                          "type 'new' or 'open' to start: ")
+    except EOFError:
+        pass
     while decision1.lower() not in ["new", "open"]:
         decision1 = input("not a valid command. type 'new' or 'open' to start: ")
     if decision1.lower() == "open":
@@ -127,8 +131,12 @@ def main() -> None:
             print(spreadsheet)
             continue
 
-        if command.lower() == "remove":
-            _, cell_name = command.split(maxsplit=1)
+        if command.lower().startswith("remove"):
+            try:
+                _, cell_name = command.split(maxsplit=1)
+            except ValueError:
+                print("Invalid command. Please use the format 'remove [cell]'.")
+                continue
             spreadsheet.remove_cell(cell_name)
             print(spreadsheet)
             continue
@@ -164,7 +172,7 @@ def main() -> None:
             print(f"You're in {new_name} sheet. Type 'help' for options, or start editing.")
             continue
 
-        if command.lower().startswith("remove sheet"):
+        if command.lower() == "remove sheet":
             workbook.print_list()
             sheet_name = input("which sheet would you like to remove? ")
             while sheet_name not in workbook.list_sheets():
@@ -182,13 +190,19 @@ def main() -> None:
             continue
 
         if command.lower().startswith("graph"):
-            _, graph_type, range1, range2 = command.split(maxsplit=3)
+            try:
+                _, graph_type, range1, range2 = command.split(maxsplit=3)
+            except ValueError:
+                print("Invalid command. Please use the format 'graph [type] [range1] [range2]'.")
+                continue
             spreadsheet.create_graph(graph_type, range1, range2)
 
 
 
-
-
-
 if __name__ == "__main__":
+    try:
+        if sys.argv[1] == "--help":
+            print(help_text)
+    except IndexError:
+        pass
     main()
