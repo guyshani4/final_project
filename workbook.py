@@ -77,12 +77,7 @@ class Workbook:
     def to_dict(self):
         return {sheet_name: sheet.to_dict() for sheet_name, sheet in self.sheets.items()}
 
-    def save_workbook(self, filename):
-        workbook_dict = self.to_dict()
-        with open(filename, 'w') as f:
-            json.dump(workbook_dict, f)
-
-    def dict_print(self) -> str:
+    def dict_print(self):
         print(self.to_dict())
 
     def load_and_open_workbook(self, filename):
@@ -100,16 +95,14 @@ class Workbook:
             self.sheets[sheet_name] = spreadsheet
         return self
 
-
-    def save_workbook(self, filename):
+    def export_to_json(self, filename):
         """
         Saves the workbook to a file in JSON format.
         :param filename: The name of the file to save the workbook to.
         """
         workbook_dict = {name: sheet.to_dict() for name, sheet in self.sheets.items()}
-        with open(filename, 'w') as f:
+        with open(filename + ".json", 'w') as f:
             json.dump(workbook_dict, f)
-
 
     def export_to_pdf(self, filename):
         """
@@ -119,13 +112,25 @@ class Workbook:
         for sheet_name, spreadsheet in self.sheets.items():
             c = canvas.Canvas(f"{filename}_{sheet_name}.pdf", pagesize=letter)
             width, height = letter
+            # Increased x_offset for more space from the left border
+            x_offset = 50  # Increased offset for better visibility of the first column
+            y_offset = 70  # Adjusted for aesthetic spacing from the top
+
+            # Adjusted column spacing for a prettier layout
+            column_spacing = 60  # Increase if your columns are too close to each other
+
+            # Adjusted row spacing for a prettier layout
+            row_spacing = 20  # Increase if your rows are too close to each other
+
             for i in range(1, spreadsheet.max_row() + 1):
-                for j in range(1, spreadsheet.max_col_index() + 1):
-                    cell_value = spreadsheet.get_cell_value(f"{spreadsheet.col_index_to_letter(j)}{i}")
-                    c.drawString(10 + j*50, height - i*30, str(cell_value))
+                for j in range(spreadsheet.max_col_index() + 1):
+                    cell_name = f"{spreadsheet.col_index_to_letter(j)}{i}"
+                    cell_value = spreadsheet.get_cell_value(cell_name)
+                    if cell_value is not None:
+                        x_position = x_offset + j * column_spacing
+                        y_position = height - y_offset - i * row_spacing
+                        c.drawString(x_position, y_position, str(cell_value))
             c.save()
-
-
 
     def export_to_csv(self, filename):
         """

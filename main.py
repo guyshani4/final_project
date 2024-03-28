@@ -77,7 +77,7 @@ def main():
 
         if command.lower() == "save":
             filename = input("what file name? ")
-            workbook.save_workbook(filename)
+            workbook.export_to_json(filename)
             print(f"Saved {filename} successfully.")
             continue
 
@@ -85,8 +85,9 @@ def main():
             print("You can save the workbook in the following formats:")
             print("  - csv")
             print("  - pdf")
+            print("  - excel")
             save_format = input("Please enter the format you want to save the spreadsheet in: ")
-            while save_format not in ["csv", "pdf"]:
+            while save_format not in ["csv", "pdf", "excel"]:
                 save_format = input("Invalid format. Please enter either 'csv', 'pdf', or 'json'.")
             filename = input("Please enter the filename: ")
             if save_format.lower() == "csv":
