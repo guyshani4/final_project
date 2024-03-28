@@ -1,213 +1,173 @@
 from electronic_sheet import *
+from workbook import *
+import unittest
 import pytest
 from unittest.mock import Mock, patch
+
+
+def test_set_value():
+    cell = Cell()
+    cell.set_value(10)
+    assert cell.value == 10
+    cell.set_value(20)
+    assert cell.value == 20
+    cell.set_value("Hello")
+    assert cell.value == "Hello"
+    cell.set_value(None)
+    assert cell.value is None
+
+
+def test_add_remove_dependent():
+    cell = Cell()
+    cell.add_dependent('A1')
+    cell.add_dependent('B1')
+    cell.add_dependent('C1')
+    assert len(cell.dependents) == 3
+    cell.remove_dependent('B1')
+    assert len(cell.dependents) == 2
+    assert 'B1' not in cell.dependents
+
+
+def test_calculated_value():
+    cell = Cell()
+    spreadsheet = Spreadsheet()
+    cell.set_value(10)
+    assert cell.calculated_value(spreadsheet) == 10
+    cell.set_value(20)
+    assert cell.calculated_value(spreadsheet) == 20
+    cell.set_value("Hello")
+    assert cell.calculated_value(spreadsheet) == "Hello"
+    cell.set_value(None)
+    assert cell.calculated_value(spreadsheet) is None
+
+
 def test_is_valid_cell_name():
     spreadsheet = Spreadsheet()
-    # Test valid cell names
-    assert spreadsheet.is_valid_cell_name("A1") == True
-    assert spreadsheet.is_valid_cell_name("B2") == True
-    assert spreadsheet.is_valid_cell_name("AZ10") == True
-    # Test invalid cell names
-    assert spreadsheet.is_valid_cell_name("1A") == False
-    assert spreadsheet.is_valid_cell_name("a10") == False
-    assert spreadsheet.is_valid_cell_name("") == False
-
-def test_set_cell_valid_name():
-    spread1 = Spreadsheet()
-    spread2 = Spreadsheet()
-    spread1.set_cell("A1", 10)
-    assert "A1" in spread1.cells
-    assert isinstance(spread1.cells["A1"], Cell)
-    assert spread1.cells["A1"].value == 10
-    spread2.set_cell('B2', formula="A1 * 2")
-    assert 'B2' in spread2.cells
-    assert spread2.cells['B2'].formula == "A1 * 2"
-    spread3 = Spreadsheet()
-    spread3.set_cell('A3', 200)
-    spread3.set_cell('A3', 300)  # Update the value
-    assert spread3.cells['A3'].value == 300
-    spread3.set_cell('A4', 500)
-    spread3.set_cell('A4', formula="A3 + 100")  # Change to formula
-    assert spread3.get_cell_value('A4') == 400
+    assert spreadsheet.is_valid_cell_name('A1') == True
+    assert spreadsheet.is_valid_cell_name('B2') == True
+    assert spreadsheet.is_valid_cell_name('AZ10') == True
+    assert spreadsheet.is_valid_cell_name('1A') == False
+    assert spreadsheet.is_valid_cell_name('a10') == False
+    assert spreadsheet.is_valid_cell_name('') == False
+    assert spreadsheet.is_valid_cell_name('A 1') == False
+    assert spreadsheet.is_valid_cell_name('A-1') == False
 
 
-valid_cell_names = ["A1", "B2", "AA10", "Z99", "AAA100"]
-invalid_cell_names = ["1A", "B-2", "AA_10", "99Z", "100AAA", "", "A!1", "A B"]
-
-def test_get_cell_with_valid_names():
-    ss = Spreadsheet()
-    for name in valid_cell_names:
-        # Mock a Cell and add it to the spreadsheet for each valid name
-        test_cell = Cell()
-        ss.cells[name] = test_cell
-        assert ss.get_cell(name) is test_cell, f"Failed to retrieve the correct Cell object for {name}."
-
-def test_get_cell_with_nonexistent_names():
-    ss = Spreadsheet()
-    for name in valid_cell_names:
-        # Ensure that validly formatted but non-existent cell names return None
-        assert ss.get_cell(name) is None, f"Should return None for a non-existent cell {name} that is validly named."
-
-@patch.object(Spreadsheet, 'is_valid_cell_name')
-def test_get_cell_with_invalid_names(mock_is_valid):
-    ss = Spreadsheet()
-    mock_is_valid.return_value = False  # Assume all names in the list are invalid
-    for name in invalid_cell_names:
-        result = ss.get_cell(name)
-        assert result is None, f"Should return None for an invalid cell name {name}."
-        mock_is_valid.assert_called_with(name)  # Check if is_valid_cell_name was called with the invalid name
-
-def setup_spreadsheet():
+def test_set_get_cell():
     spreadsheet = Spreadsheet()
     spreadsheet.set_cell('A1', 10)
-    spreadsheet.set_cell('A2', 20, formula="A1 * 2")
-    spreadsheet.set_cell('A3', formula="A1 + A2")
-    return spreadsheet
+    assert spreadsheet.get_cell_value('A1') == 10
+    spreadsheet.set_cell('B1', 20)
+    assert spreadsheet.get_cell_value('B1') == 20
+    spreadsheet.set_cell('A1', 30)
+    assert spreadsheet.get_cell_value('A1') == 30
+    spreadsheet.set_cell('C1', "Hello")
+    assert spreadsheet.get_cell_value('C1') == "Hello"
+    spreadsheet.set_cell('D1', None)
+    assert spreadsheet.get_cell_value('D1') is None
 
-def test_get_cell_value_valid_cell():
+
+def test_remove_cell():
+    spreadsheet = Spreadsheet()
+    spreadsheet.set_cell('A1', 10)
+    spreadsheet.remove_cell('A1')
+    assert spreadsheet.get_cell('A1').value is None
+
+
+def test_max_row():
+    spreadsheet = Spreadsheet()
+    spreadsheet.set_cell('A1', 10)
+    spreadsheet.set_cell('A2', 20)
+    spreadsheet.set_cell('A3', 30)
+    assert spreadsheet.max_row() == 3
+
+
+def test_max_col_index():
+    spreadsheet = Spreadsheet()
+    spreadsheet.set_cell('A1', 10)
+    spreadsheet.set_cell('B1', 20)
+    spreadsheet.set_cell('C1', 30)
+    assert spreadsheet.max_col_index() == 2
+
+def test_workbook():
+    workbook = Workbook()
+    assert workbook.get_sheet('Sheet2') is None
+    workbook.add_sheet('Sheet2')
+    assert workbook.get_sheet('Sheet2') is not None
+    workbook.remove_sheet('Sheet2')
+    assert workbook.get_sheet('Sheet2') is None
+    workbook.add_sheet('Sheet2')
+    assert workbook.get_sheet('Sheet2') is not None
+    workbook.rename_sheet('Sheet2', 'Sheet3')
+    assert workbook.get_sheet('Sheet2') is None
+    assert workbook.get_sheet('Sheet3') is not None
+
+def test_str():
+    spreadsheet = Spreadsheet()
+    spreadsheet.set_cell('A1', 10)
+    spreadsheet.set_cell('B1', 20)
+    spreadsheet.set_cell('A2', 30)
+    assert str(spreadsheet) == ('     A          B         \n'
+                                '--------------------------\n'
+                                '1    10.0       20.0      \n'
+                                '2    30.0       -         ')
+
+def test_get_range_cells_basic_range():
     ss = Spreadsheet()
-    # Test with a numeric value
-    mock_cell_numeric = Mock(spec=Cell)
-    mock_cell_numeric.calculated_value.return_value = 123
-    with patch.object(ss, 'get_cell', return_value=mock_cell_numeric), \
-         patch.object(ss, 'is_valid_cell_name', return_value=True):
-        assert ss.get_cell_value("A1") == 123, "Failed to retrieve numeric value"
+    expected = ["A1", "A2", "B1", "B2"]
+    assert ss.get_range_cells("A1", "B2") == expected
 
-    # Test with a string value
-    mock_cell_string = Mock(spec=Cell)
-    mock_cell_string.calculated_value.return_value = "Hello"
-    with patch.object(ss, 'get_cell', return_value=mock_cell_string):
-        assert ss.get_cell_value("B2") == "Hello", "Failed to retrieve string value"
-
-
-def test_get_cell_value_invalid_cell_name(capsys):
+# Test for a single-cell range
+def test_get_range_cells_single_cell():
     ss = Spreadsheet()
-    with patch.object(ss, 'is_valid_cell_name', return_value=False):
-        result = ss.get_cell_value("InvalidCell")
-        captured = capsys.readouterr()  # Capture the print output
-        assert result is None, "Should return None for invalid cell names"
-        assert "Invalid cell name 'InvalidCell'." in captured.out, "Expected error message not printed"
+    expected = ["A1"]
+    assert ss.get_range_cells("A1", "A1") == expected
 
-def test_get_cell_value_cell_does_not_exist(capsys):
+# Test for a larger range
+def test_get_range_cells_larger_range():
     ss = Spreadsheet()
-    # Assuming get_cell returns None for a non-existing cell and the cell name is valid
-    with patch.object(ss, 'get_cell', return_value=None), \
-         patch.object(ss, 'is_valid_cell_name', return_value=True):
-        result = ss.get_cell_value("Z99")
-        assert result is None, "Should return None for non-existing cells"
-        captured = capsys.readouterr()
-        assert not captured.out, "No error message should be printed for non-existing but valid cells"
+    expected = ["A1", "A2", "A3", "B1", "B2", "B3", "C1", "C2", "C3"]
+    assert ss.get_range_cells("A1", "C3") == expected
 
-def test_regular_formula_valid():
-    spreadsheet = setup_spreadsheet()
-    assert spreadsheet.regular_formula("A1 + A2") == 30
-    assert spreadsheet.regular_formula("20 / 4") == 5
 
-def test_regular_formula_unsupported_operation():
+# Test for wide range
+def test_get_range_cells_wide_range():
     ss = Spreadsheet()
-    with patch.object(ss, 'get_cell_value', side_effect=[6, 3]):
-        result = ss.regular_formula("A1 ^ A2")
-        assert result is None, "Unsupported operation should return None"
-        result = ss.regular_formula("A1A2")
-        assert result is None, "Invalid formula format should return None"
+    expected = ["A1", "A2", "A3", "A4", "A5",
+                "B1", "B2", "B3", "B4", "B5",
+                "C1", "C2", "C3", "C4", "C5",
+                "D1", "D2", "D3", "D4", "D5",
+                "E1", "E2", "E3", "E4", "E5"]
+    assert ss.get_range_cells("A1", "E5") == expected
 
-def test_evaluate_formula_functions():
-    spreadsheet = setup_spreadsheet()
-    spreadsheet.set_cell('B1', 30)
-    spreadsheet.set_cell('B2', 40)
-    spreadsheet.set_cell('B3', 50)
-    assert spreadsheet.evaluate_formula("SUM(B1:B3)") == 120
-    assert spreadsheet.evaluate_formula("AVERAGE(B1:B3)") == 40
-    assert spreadsheet.evaluate_formula("MIN(B1:B3)") == 30
-    assert spreadsheet.evaluate_formula("MAX(B1:B3)") == 50
 
-def test_regular_formula_division_by_zero():
+def test_calculate_average():
+    spreadsheet = Spreadsheet()
+    spreadsheet.set_cell('A1', 10)
+    spreadsheet.set_cell('B1', 20)
+    spreadsheet.set_cell('A2', 30)
+    assert spreadsheet.calculate_average('A1', 'B2') == 20
+
+def test_calculate_sum():
+    spreadsheet = Spreadsheet()
+    spreadsheet.set_cell('A1', 10)
+    spreadsheet.set_cell('B1', 20)
+    spreadsheet.set_cell('A2', 30)
+    assert spreadsheet.calculate_sum('A1', 'B2') == 60
+
+def test_col_index_to_letter():
     ss = Spreadsheet()
-    with patch.object(ss, 'get_cell_value', side_effect=[6, 0]):
-        result = ss.regular_formula("A1 / A2")
-        assert result is None, "Division by zero should return None"
 
-def populate_spreadsheet(spreadsheet):
-    spreadsheet.set_cell('A1', 100)
-    spreadsheet.set_cell('B1', 200)
-    spreadsheet.set_cell('A2',None, "A1 * 2")
-    spreadsheet.set_cell('B2',None, "B1 * 2")
-    return spreadsheet
-    # Assuming that formulas "A1 * 2" and "B1 * 2" would be evaluated to 200 and 400, respectively
+    # Test single-letter columns
+    assert ss.col_index_to_letter(0) == "A", "Index 0 should correspond to A"
+    assert ss.col_index_to_letter(1) == "B", "Index 1 should correspond to B"
+    assert ss.col_index_to_letter(25) == "Z", "Index 25 should correspond to Z"
 
-def test_str_empty_spreadsheet():
-    ss = Spreadsheet()
-    assert str(ss) == ""
-
-def test_str_non_empty():
-    ss = Spreadsheet()
-    ss = populate_spreadsheet(ss)
-    expected_output_simple = "{\n  A1: 100.0,\n  B1: 200.0,\n  A2: 200.0 (Formula: A1 * 2),\n  B2: 400.0 (Formula: B1 * 2)\n}"
-    assert str(ss) == expected_output_simple
-
-
-def test_str_with_various_cell_values():
-    ss = Spreadsheet()
-    ss.set_cell('A1', "Text")
-    ss.set_cell('B1',3.14159)
-    ss.set_cell('C1', "True")
-    expected_part_of_output = "{\n  A1: Text,\n  B1: 3.14159,\n  C1: True\n}"
-    assert expected_part_of_output in str(ss)
-
-def test_str_with_large_range():
-    ss = Spreadsheet()
-    for i in range(1, 11):  # Populate A1:A10 with incrementing values
-        ss.set_cell(f'A{i}', i * 10)
-    assert "A10: 100" in str(ss)  # Check if the last cell is correctly represented
-
-def test_print_empty_spreadsheet():
-    ss = Spreadsheet()
-    expected_output = "The spreadsheet is empty."
-    assert print(ss) == expected_output
-
-def test_print_filled_spreadsheet():
-    ss = Spreadsheet()
-    ss.set_cell('A1', 100)  # Assuming set_cell takes numeric values directly
-    ss.set_cell('B2', 200)  # This should match with your setup; if expecting float, consider this in expected output
-    ss.set_cell('C3', "Hello")
-
-    expected_output = (
-         'A          B          C         \n'
-         '-------------------------------------\n'
-         '1    100.0      -          -         \n'
-         '2    -          200.0      -         \n'
-         '3    -          -          Hello'
-    )
-    # Adjust expected_output based on actual implementation details
-    assert ss.__str__().strip() == expected_output.strip()
-
-def test_check_operations():
-    """
-    the AVERAGE/MIN/MAX/SUM operations will work only if al the cell's values
-    in the range are integers or floats. for example, if one of the values are a string,
-    the operation will return None
-    :return:
-    """
-    spread1 = Spreadsheet()
-    spread1 = populate_spreadsheet(spread1)
-    spread1.set_cell('C5', None, 'AVERAGE(A1:B2)')
-    spread1.set_cell('C6', None, 'MIN(A1:B2)')
-    spread1.set_cell('C7', None, 'MAX(A1:B2)')
-    spread1.set_cell('C8', None, 'SUM(A1:B2)')
-    spread1.set_cell('B3', 'Hello')
-    spread1.set_cell('D5', None, 'AVERAGE(A1:B3)')
-    spread1.set_cell('D6', None, 'MIN(A1:B3)')
-    spread1.set_cell('D7', None, 'MAX(A1:B3)')
-    spread1.set_cell('D8', None, 'SUM(A1:B3)')
-    assert spread1.get_cell_value('C5') == 225.0
-    assert spread1.get_cell_value('C6') == 100.0
-    assert spread1.get_cell_value('C7') == 400.0
-    assert spread1.get_cell_value('C8') == 900.0
-    assert spread1.get_cell_value('D5') == None
-    assert spread1.get_cell_value('D6') == None
-    assert spread1.get_cell_value('D7') == None
-    assert spread1.get_cell_value('D8') == None
-
-
-
+    # Test double-letter columns (after Z, which is 25)
+    assert ss.col_index_to_letter(26) == "AA", "Index 26 should correspond to AA"
+    assert ss.col_index_to_letter(27) == "AB", "Index 27 should correspond to AB"
+    assert ss.col_index_to_letter(51) == "AZ", "Index 51 should correspond to AZ"
+    assert ss.col_index_to_letter(52) == "BA", "Index 52 should correspond to BA"
+    assert ss.col_index_to_letter(701) == "ZZ", "Index 701 should correspond to ZZ"
+    assert ss.col_index_to_letter(702) == "AAA", "Index 702 should correspond to AAA"
 

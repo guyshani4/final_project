@@ -2,6 +2,8 @@ from electronic_sheet import *
 import csv, json, xlsxwriter
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
+from typing import *
+
 
 class Workbook:
     """
@@ -9,14 +11,14 @@ class Workbook:
     similar to a workbook in Excel containing multiple sheets.
     """
 
-    def __init__(self, name = None):
+    def __init__(self, name: Optional[str] = None) -> None:
         """
         Initializes a new workbook with an empty dictionary of sheets.
         """
         self.sheets = {}
         self.name = name
 
-    def add_sheet(self, sheet_name):
+    def add_sheet(self, sheet_name: str) -> None:
         """
         Adds a new spreadsheet to the workbook with the given name.
         :param sheet_name: The name of the new sheet. Must be unique within the workbook.
@@ -27,7 +29,7 @@ class Workbook:
             self.sheets[sheet_name] = Spreadsheet(sheet_name)
             print(f"Sheet '{sheet_name}' added to the workbook.")
 
-    def remove_sheet(self, sheet_name):
+    def remove_sheet(self, sheet_name: str) -> None:
         """
         Removes the spreadsheet with the given name from the workbook, if it exists.
         :param sheet_name: The name of the sheet to be removed.
@@ -38,7 +40,7 @@ class Workbook:
         else:
             print(f"Sheet '{sheet_name}' does not exist.")
 
-    def get_sheet(self, sheet_name):
+    def get_sheet(self, sheet_name: str) -> Optional[Spreadsheet]:
         """
         Retrieves the spreadsheet with the given name, if it exists.
         :param sheet_name: The name of the sheet to retrieve.
@@ -46,7 +48,7 @@ class Workbook:
         """
         return self.sheets.get(sheet_name, None)
 
-    def list_sheets(self):
+    def list_sheets(self) -> List[str]:
         """
         Lists the names of all spreadsheets in the workbook.
 
@@ -54,13 +56,12 @@ class Workbook:
         """
         return list(self.sheets.keys())
 
-    def print_list(self):
+    def print_list(self) -> None:
         print("Sheets in the workbook:")
         for name in self.sheets.keys():
             print(name)
 
-
-    def rename_sheet(self, old_name, new_name):
+    def rename_sheet(self, old_name: str, new_name: str) -> None:
         """
         Renames an existing sheet from old_name to new_name, if old_name exists and new_name does not.
         :param old_name: The current name of the sheet to be renamed.
@@ -74,14 +75,13 @@ class Workbook:
             self.sheets[new_name] = self.sheets.pop(old_name)
             print(f"Sheet '{old_name}' has been renamed to '{new_name}'.")
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Dict[str, Any]]:
         return {sheet_name: sheet.to_dict() for sheet_name, sheet in self.sheets.items()}
 
-    def dict_print(self):
+    def dict_print(self) -> None:
         print(self.to_dict())
 
-
-    def export_to_json(self, filename):
+    def export_to_json(self, filename: str) -> None:
         """
         Saves the workbook to a file in JSON format.
         :param filename: The name of the file to save the workbook to.
@@ -90,7 +90,7 @@ class Workbook:
         with open(filename + ".json", 'w') as f:
             json.dump(workbook_dict, f)
 
-    def export_to_pdf(self, filename):
+    def export_to_pdf(self, filename: str) -> None:
         """
         Exports the workbook to a PDF file, with a table-like appearance including grid lines and row numbers.
         :param filename: The name of the PDF file to be created.
@@ -136,7 +136,7 @@ class Workbook:
 
             c.save()
 
-    def export_to_csv(self, filename):
+    def export_to_csv(self, filename: str) -> None:
         """
         Exports the workbook to a CSV file.
         :param filename: The name of the CSV file to be created.
@@ -149,7 +149,7 @@ class Workbook:
                            for j in range(1, spreadsheet.max_col_index() + 1)]
                     writer.writerow(row)
 
-    def export_to_excel(self, filename):
+    def export_to_excel(self, filename: str) -> None:
         """
         Exports the workbook to an Excel file.
         :param filename: The name of the Excel file to be created.
@@ -167,7 +167,8 @@ class Workbook:
 
         workbook.close()
 
-def load_and_open_workbook(filename):
+
+def load_and_open_workbook(filename: str) -> Workbook:
     """
     Loads a workbook file and opens it for editing.
     :param filename: The name of the workbook file to be opened.
@@ -189,4 +190,3 @@ def load_and_open_workbook(filename):
         workbook.sheets[sheet_name] = spreadsheet  # Add the Spreadsheet object to the workbook
 
     return workbook
-

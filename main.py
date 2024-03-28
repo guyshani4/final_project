@@ -1,7 +1,8 @@
 from workbook import *
+import typing
 
 
-def get_spreadsheet():
+def get_spreadsheet() -> Tuple[Workbook, Spreadsheet]:
     workbook = Workbook()
     decision1 = input("Welcome to WorkBook! would you like to load an existing workbook, or start a new one?\n"
                       "type 'new' or 'open' to start: ")
@@ -45,7 +46,6 @@ help_text = """
                             these formulas should be typed in a specific form: 
                             for example: =MAX(A1:B2) is correct and set the maximum number in the range of A1 and B2. 
                             for SQRT operator a valid form: =SQRT(A1).
-                  - details - Get the detailed version of the spreadsheet.
                   - quit - Exit the program with option to save.
                   - show - shows the spreadsheet in an organized table
                   - remove [cell] - Removes the cell's value
@@ -55,10 +55,14 @@ help_text = """
                   - remove sheet - if you want to removes a sheet
                   - save - if you want to save the workbook
                   - export - if you want to export the workbook to a different file type
+                  - graph [type] [range1] [range2] - if you want to create a graph. 
+                    the graph types are: 'bar', 'pie'. 
+                    the first range needs to include one columns that represent the topics of the graph.
+                    the second range needs to include one column that represent the values of the topics.
             """
 
 
-def main():
+def main() -> None:
     workbook, spreadsheet = get_spreadsheet()
     print("Type 'help' for options, or start editing.")
     while True:
@@ -67,7 +71,7 @@ def main():
             if input("Are you sure you want to quit? ").lower() == "yes":
                 if input("Would you like to save the workbook? ").lower() == "yes":
                     filename = input("what file name? ")
-                    workbook.save_workbook(filename)
+                    workbook.export_to_json(filename)
                     print("exiting workbook... Bye!")
                     break
                 else:
@@ -119,10 +123,6 @@ def main():
                 print(spreadsheet)
             continue
 
-        if command.lower().startswith("details"):
-            print(workbook.dict_print())
-            continue
-
         if command.lower() == "show":
             print(spreadsheet)
             continue
@@ -140,7 +140,7 @@ def main():
             print(f"You're in {sheet_name} sheet. Type 'help' for options, or start editing.")
             continue
 
-        if command.lower() == "sheets":
+        if command.lower().startswith("sheets"):
             workbook.print_list()
             sheet_name = input("which sheet would you like to open? ")
             while sheet_name not in workbook.list_sheets():
@@ -152,7 +152,7 @@ def main():
             print(spreadsheet)
             continue
 
-        if command.lower() == "rename sheet":
+        if command.lower().startswith("rename sheet"):
             workbook.print_list()
             sheet_name = input("which sheet would you like to rename? ")
             while sheet_name not in workbook.list_sheets():
@@ -164,7 +164,7 @@ def main():
             print(f"You're in {new_name} sheet. Type 'help' for options, or start editing.")
             continue
 
-        if command.lower() == "remove sheet":
+        if command.lower().startswith("remove sheet"):
             workbook.print_list()
             sheet_name = input("which sheet would you like to remove? ")
             while sheet_name not in workbook.list_sheets():
