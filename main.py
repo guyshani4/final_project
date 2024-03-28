@@ -37,11 +37,11 @@ def get_spreadsheet():
 
 help_text = """
                 The Optional Commands:
-                  - set [cell] [value] - Set the value of a cell (value can be a number or a string).
+                  - set [cell] [value] - Set the value of a cell (value can be a number or words).
                   - set [cell] [formula] - Set the formula for a cell and updates its value.
                             PAY ATTENTION! the formula must start with "=" sign.
                             the formulas should be combination of numbers and cells only.
-                            there are 4 special formulas: 'AVERAGE' 'MIN' 'MAX' 'SUM' 'SQRT'. 
+                            there are 5 special formulas: 'AVERAGE' 'MIN' 'MAX' 'SUM' 'SQRT'. 
                             these formulas should be typed in a specific form: 
                             for example: =MAX(A1:B2) is correct and set the maximum number in the range of A1 and B2. 
                             for SQRT operator a valid form: =SQRT(A1).
@@ -51,8 +51,7 @@ help_text = """
                   - remove [cell] - Removes the cell's value
                   - new - opens a new sheet in your workbook
                   - sheets - if you want to see the sheet's list and choose which sheet to open
-                  - rename - if you want to rename a sheet
-                  - change sheet - if you want to rename a sheet
+                  - rename sheet - if you want to rename a sheet
                   - remove sheet - if you want to removes a sheet
                   - save - if you want to save the workbook
                   - export - if you want to export the workbook to a different file type
@@ -87,18 +86,21 @@ def main():
 
         if command.lower() == "export":
             print("You can save the workbook in the following formats:")
-            print("  - csv")
             print("  - pdf")
             print("  - excel")
+            print("  - csv")
             save_format = input("Please enter the format you want to save the spreadsheet in: ").lower()
             while save_format not in ["csv", "pdf", "excel"]:
                 save_format = input("Invalid format. Please enter either 'csv', 'pdf', or 'json'.").lower()
             if save_format.lower() == "csv":
                 workbook.export_to_csv(workbook.name)
+                print(f"Saved {workbook.name}.csv successfully.")
             elif save_format.lower() == "pdf":
                 workbook.export_to_pdf(workbook.name)
+                print(f"Saved {workbook.name}.pdf successfully.")
             elif save_format.lower() == "excel":
                 workbook.export_to_excel(workbook.name)
+                print(f"Saved {workbook.name}.xlsx successfully.")
             continue
 
         if command.lower().startswith("set"):
@@ -109,7 +111,9 @@ def main():
                 else:
                     formula = value[1:]
                     spreadsheet.set_cell(cell_name, formula=formula)
-            except Exception as err:
+            except ValueError:
+                print("Invalid command. Please use the format 'set [cell] [value]' or 'set [cell] [formula]'.")
+                print("for more information type 'help'.")
                 continue
             if spreadsheet.cells != {}:
                 print(spreadsheet)
@@ -137,13 +141,18 @@ def main():
             continue
 
         if command.lower() == "sheets":
-            print(workbook.list_sheets())
+            workbook.print_list()
             sheet_name = input("which sheet would you like to open? ")
+            while sheet_name not in workbook.list_sheets():
+                workbook.print_list()
+                sheet_name = input("name did not found..."
+                                   "which sheet would you like to open? ")
             spreadsheet = workbook.get_sheet(sheet_name)
             print(f"You're in {sheet_name} sheet. Type 'help' for options, or start editing.")
+            print(spreadsheet)
             continue
 
-        if command.lower() == "rename":
+        if command.lower() == "rename sheet":
             workbook.print_list()
             sheet_name = input("which sheet would you like to rename? ")
             while sheet_name not in workbook.list_sheets():
@@ -153,17 +162,6 @@ def main():
             workbook.rename_sheet(sheet_name, new_name)
             spreadsheet = workbook.get_sheet(new_name)
             print(f"You're in {new_name} sheet. Type 'help' for options, or start editing.")
-            continue
-
-        if command.lower() == "change":
-            workbook.print_list()
-            new_name = input("which sheet would you like to get into? ")
-            while new_name not in workbook.list_sheets():
-                workbook.print_list()
-                new_name = input("name did not found..."
-                                 "which sheet would you like to open? ")
-            spreadsheet = workbook.get_sheet(new_name)
-            print(f"You're in {new_name} sheet.")
             continue
 
         if command.lower() == "remove sheet":
@@ -182,6 +180,14 @@ def main():
             else:
                 print("There are no sheets in the workbook.")
             continue
+
+        if command.lower().startswith("graph"):
+            _, graph_type, range1, range2 = command.split(maxsplit=3)
+            spreadsheet.create_graph(graph_type, range1, range2)
+
+
+
+
 
 
 if __name__ == "__main__":

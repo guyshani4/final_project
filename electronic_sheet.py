@@ -1,6 +1,7 @@
 import json, re
 import math
 from typing import *
+import matplotlib.pyplot as plt
 LETTERS_NUM = 26
 
 
@@ -18,10 +19,10 @@ class Cell:
         self.formula = formula
         self.dependents = set() # Cells that depend on this cell
 
-    def add_dependent(self, cell_name):
+    def add_dependent(self, cell_name: str) -> None:
         self.dependents.add(cell_name)
 
-    def remove_dependent(self, cell_name):
+    def remove_dependent(self, cell_name: str) -> None:
         if cell_name in self.dependents:
             self.dependents.remove(cell_name)
 
@@ -36,17 +37,17 @@ class Cell:
             return spreadsheet.evaluate_formula(self.formula)
         return self.value
 
-    def set_value(self, value):
+    def set_value(self, value: Any) -> None:
         self.value = value
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         return {
             'value': self.value,
             'formula': self.formula,
             'dependents': list(self.dependents)
         }
 
-    def update_dependents(self, dependents):
+    def update_dependents(self, dependents: List[str]) -> None:
         self.dependents = set(dependents)
 
 
@@ -145,7 +146,7 @@ class Spreadsheet:
 
         return '\n'.join(rows)
 
-    def set_cell(self, cell_name, value=None, formula=None):
+    def set_cell(self, cell_name: str, value: Optional[Any] = None, formula: Optional[str] = None) -> None:
         if not self.is_valid_cell_name(cell_name):
             print(f"Invalid cell name '{cell_name}'."
                   f" Cell names must be in the format 'A1', 'B2', 'AZ10' etc.")
@@ -158,17 +159,19 @@ class Spreadsheet:
         # Update the cell's value or formula
         cell = self.cells[cell_name]
         if value is not None:
+            if cell.formula:
+                self.remove_cell(cell_name)
             self.set_cell_value(cell, value)
         if formula is not None:
             self.set_cell_formula(cell, cell_name, formula)
 
-    def set_cell_value(self, cell, value):
+    def set_cell_value(self, cell: Cell, value: Any) -> None:
         try:
             cell.set_value(float(value))
         except:
             cell.value = value
 
-    def set_cell_formula(self, cell, cell_name, formula):
+    def set_cell_formula(self, cell: Cell, cell_name: str, formula: str) -> None:
         if self.is_valid_cell_name(formula):  # If the formula is just a cell name
             referenced_cell = self.get_cell(formula)
             if formula == cell_name:
@@ -181,6 +184,9 @@ class Spreadsheet:
         else:
             if len(formula) >= 5:
                 if formula.startswith("SQRT"):
+                    if not self.is_valid_cell_name(formula):
+                        print("SQRT formula must be in the format 'SQRT(cell)'.\n"
+                              "For example: 'SQRT(A1)'.")
                     dependencies = [formula[5:-1]]
                 else:
                     cells = self.valid_cells_index(formula)
@@ -330,7 +336,7 @@ class Spreadsheet:
     def cells_values_list(self, start: str, end: str) -> Any:
         """
         Retrieves a list with all the values in a given range
-         :param start: The starting cell name of the range.
+        :param start: The starting cell name of the range.
         :param end: The ending cell name of the range.
         :return: list of values of all the cells in the range
         """
@@ -483,34 +489,21 @@ class Spreadsheet:
                 cells.append(cell_name)
         return cells
 
-
-    def load(self, filename: str) -> None:
-        """
-        Loads a spreadsheet from a file saved in JSON format.
-        it loads the json to a Spreadsheet file again, initializing every cell again.
-        :param filename: The name of the file to load the spreadsheet from.
-        """
-        with open(filename, 'r') as f:
-            loaded_dict = json.load(f)
-        for name, data in loaded_dict.items():
-            self.set_cell(name, data['value'], data['formula'])
-
     def remove_cell(self, cell_name: str) -> None:
-        if cell_name not in self.cells:
-            return
-        if self.get_cell(cell_name).formula:
-            formula = self.get_cell(cell_name).formula
-            if len(formula) >= 5:
-                cells = self.valid_cells_index(formula)
-                dependencies = self.get_range_cells(cells[0], cells[1])
-            else:
-                dependencies = [formula[:2]]
-            for dep_name in dependencies:
-                self.get_cell(dep_name).dependents.remove(cell_name)
-        del self.cells[cell_name]
+        if cell_name in self.cells:
+            cell = self.get_cell(cell_name)
+            if cell.formula:
+                # If the cell has a formula, it might be a dependent of other cells
+                for other_cell in self.cells.values():
+                    if cell_name in other_cell.dependents:
+                        # If the cell is a dependent of another cell, remove it
+                        other_cell.remove_dependent(cell_name)
+            # Finally, remove the cell's arguments
+            cell.value = None
+            cell.formula = None
 
 
-    def max_row(self):
+    def max_row(self) -> int:
         """
         Returns the maximum row index that has been used in the spreadsheet.
         """
@@ -520,7 +513,7 @@ class Spreadsheet:
         return max(rows)
 
 
-    def max_col_index(self):
+    def max_col_index(self) -> int:
         """
         Returns the maximum column index that has been used in the spreadsheet.
         """
@@ -529,9 +522,48 @@ class Spreadsheet:
         cols = [self.col_letter_to_index(cell.rstrip('0123456789')) for cell in self.cells.keys()]
         return max(cols)
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Dict[str, Any]]:
         return {
             cell_name: cell.to_dict() for cell_name, cell in self.cells.items()
         }
+
+    def create_graph(self, graph_type: str, x_range: str, y_range: str) -> None:
+
+        try:
+            # Get the cell names for the x and y data
+            x_cells = self.get_range_cells(*x_range.split(':'))
+            y_cells = self.get_range_cells(*y_range.split(':'))
+
+            # Retrieve the values of these cells
+            x_data = [self.get_cell(cell).value for cell in x_cells]
+            y_data = [self.get_cell(cell).value for cell in y_cells]
+
+            # Create the graph
+            if graph_type.lower() == 'bar':
+                x_label = input("Enter the x-axis label: ")
+                y_label = input("Enter the y-axis label: ")
+                plt.xlabel(x_label)
+                plt.ylabel(y_label)
+                title = input("Enter the title of the graph: ")
+                plt.title(title)
+                plt.bar(x_data, y_data)
+            elif graph_type.lower() == 'pie':
+                plt.pie(y_data, labels=x_data, autopct='%1.1f%%')
+            else:
+                print(f"Invalid graph type: {graph_type}")
+                return
+            # Display the graph and wait for it to be closed before continuing
+            plt.show()
+
+        except Exception as e:
+            print(f"An error occurred while creating the graph: {str(e)}")
+            print("Invalid command. Please use the format 'graph [type] [range1] [range2]'.\n"
+                  "For example: 'graph line A1:A10 B1:B10'\n"
+                  "Supported graph types: 'bar', 'pie'\n"
+                  "the first range should be the x-axis - represent topics\n"
+                  "the second range should be the y-axis - represent values.\n"
+                  "the column letter in the start/end range should be the same.")
+            return
+
 
 
