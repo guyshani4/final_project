@@ -5,39 +5,44 @@ from workbook import *
 def get_spreadsheet() -> Tuple[Workbook, Spreadsheet]:
     decision1 = ""
     workbook = Workbook()
-    try:
-        decision1 = input("Welcome to WorkBook! would you like to load an existing workbook, or start a new one?\n"
-                          "type 'new' or 'open' to start: ")
-    except EOFError:
-        pass
     while decision1.lower() not in ["new", "open"]:
-        decision1 = input("not a valid command. type 'new' or 'open' to start: ")
+        try:
+            decision1 = input("Welcome to WorkBook! would you like to load an existing workbook, or start a new one?\n"
+                              "type 'new' or 'open' to start: ")
+        except EOFError:
+            continue
     if decision1.lower() == "open":
-        filename = ""
-        while filename == "":
-            filename = input("Enter the file you want to open: ")
+        while True:
+            try:
+                filename = input("Enter the file you want to open: ")
+            except EOFError:
+                continue
             try:
                 workbook = load_and_open_workbook(filename)
                 print(f"Opened {filename} successfully.")
             except:
                 print("it seems like the file does not fit the requirements.")
-                filename = ""
+                continue
         workbook.print_list()
-        sheet_name = input("which sheet would you like to open? ")
-        while sheet_name not in workbook.list_sheets():
-            sheet_name = input("name did not found..."
-                               "which sheet would you like to open? ")
-        print(f"You're in {sheet_name} sheet. Type 'help' for options, or start editing.")
-
+        try:
+            sheet_name = input("which sheet would you like to open? ")
+            while sheet_name not in workbook.list_sheets():
+                sheet_name = input("name did not found..."
+                                   "which sheet would you like to open? ")
+            print(f"You're in {sheet_name} sheet. Type 'help' for options, or start editing.")
+        except EOFError:
+            pass
     else:
         print("Great! let's start a new workbook. ")
-        workbook_name = input("what would you like to call your workbook? ")
-        workbook = Workbook(workbook_name)
-        print("type the name of the first sheet in your project.")
-        sheet_name = input("type here: > ").strip()
-        workbook.add_sheet(sheet_name)
-        print(f"You're in {sheet_name} sheet. Type 'help' for options, or start editing.")
-    return workbook, workbook.get_sheet(sheet_name)
+        try:
+            workbook_name = input("what would you like to call your workbook? ")
+            workbook = Workbook(workbook_name)
+            sheet_name = input("type the name of the first sheet in your project? ")
+            workbook.add_sheet(sheet_name)
+            print(f"You're in {sheet_name} sheet. Type 'help' for options, or start editing.")
+            return workbook, workbook.get_sheet(sheet_name)
+        except EOFError:
+            pass
 
 
 help_text = """
@@ -70,18 +75,24 @@ def main() -> None:
     workbook, spreadsheet = get_spreadsheet()
     print("Type 'help' for options, or start editing.")
     while True:
-        command = input("> ").strip()
+        try:
+            command = input("> ").strip()
+        except EOFError:
+            break
         if command.lower() == "quit":
-            if input("Are you sure you want to quit? ").lower() == "yes":
-                if input("Would you like to save the workbook? ").lower() == "yes":
-                    filename = input("what file name? ")
-                    workbook.export_to_json(filename)
-                    print("exiting workbook... Bye!")
-                    break
+            try:
+                if input("Are you sure you want to quit? ").lower() == "yes":
+                    if input("Would you like to save the workbook? ").lower() == "yes":
+                        filename = input("what file name? ")
+                        workbook.export_to_json(filename)
+                        print("exiting workbook... Bye!")
+                        break
+                    else:
+                        print("exiting workbook... Bye!")
+                        break
                 else:
-                    print("exiting workbook... Bye!")
-                    break
-            else:
+                    continue
+            except EOFError:
                 continue
         if command.lower() == "help":
             print(help_text)
@@ -97,9 +108,12 @@ def main() -> None:
             print("  - pdf")
             print("  - excel")
             print("  - csv")
-            save_format = input("Please enter the format you want to save the spreadsheet in: ").lower()
-            while save_format not in ["csv", "pdf", "excel"]:
-                save_format = input("Invalid format. Please enter either 'csv', 'pdf', or 'json'.").lower()
+            try:
+                save_format = input("Please enter the format you want to save the spreadsheet in: ").lower()
+                while save_format not in ["csv", "pdf", "excel"]:
+                    save_format = input("Invalid format. Please enter either 'csv', 'pdf', or 'json'.").lower()
+            except EOFError:
+                continue
             if save_format.lower() == "csv":
                 workbook.export_to_csv(workbook.name)
                 print(f"Saved {workbook.name}.csv successfully.")
@@ -142,7 +156,10 @@ def main() -> None:
             continue
 
         if command.lower() == "new":
-            sheet_name = input("name the new sheet: ")
+            try:
+                sheet_name = input("name the new sheet: ")
+            except EOFError:
+                continue
             workbook.add_sheet(sheet_name)
             spreadsheet = workbook.get_sheet(sheet_name)
             print(f"You're in {sheet_name} sheet. Type 'help' for options, or start editing.")
@@ -150,11 +167,14 @@ def main() -> None:
 
         if command.lower().startswith("sheets"):
             workbook.print_list()
-            sheet_name = input("which sheet would you like to open? ")
-            while sheet_name not in workbook.list_sheets():
-                workbook.print_list()
-                sheet_name = input("name did not found..."
-                                   "which sheet would you like to open? ")
+            try:
+                sheet_name = input("which sheet would you like to open? ")
+                while sheet_name not in workbook.list_sheets():
+                    workbook.print_list()
+                    sheet_name = input("name did not found..."
+                                       "which sheet would you like to open? ")
+            except EOFError:
+                continue
             spreadsheet = workbook.get_sheet(sheet_name)
             print(f"You're in {sheet_name} sheet. Type 'help' for options, or start editing.")
             print(spreadsheet)
@@ -162,11 +182,14 @@ def main() -> None:
 
         if command.lower().startswith("rename sheet"):
             workbook.print_list()
-            sheet_name = input("which sheet would you like to rename? ")
-            while sheet_name not in workbook.list_sheets():
-                sheet_name = input("name did not found..."
-                                   "which sheet would you like to rename? ")
-            new_name = input("which name would you like to call it? ")
+            try:
+                sheet_name = input("which sheet would you like to rename? ")
+                while sheet_name not in workbook.list_sheets():
+                    sheet_name = input("name did not found..."
+                                       "which sheet would you like to rename? ")
+                new_name = input("which name would you like to call it? ")
+            except EOFError:
+                continue
             workbook.rename_sheet(sheet_name, new_name)
             spreadsheet = workbook.get_sheet(new_name)
             print(f"You're in {new_name} sheet. Type 'help' for options, or start editing.")
@@ -174,11 +197,14 @@ def main() -> None:
 
         if command.lower() == "remove sheet":
             workbook.print_list()
-            sheet_name = input("which sheet would you like to remove? ")
-            while sheet_name not in workbook.list_sheets():
-                workbook.print_list()
-                sheet_name = input("name did not found..."
-                                   "which sheet would you like to remove? ")
+            try:
+                sheet_name = input("which sheet would you like to remove? ")
+                while sheet_name not in workbook.list_sheets():
+                    workbook.print_list()
+                    sheet_name = input("name did not found..."
+                                       "which sheet would you like to remove? ")
+            except EOFError:
+                continue
             workbook.remove_sheet(sheet_name)
             spreadsheet = workbook.get_sheet
             if workbook.list_sheets():
@@ -196,7 +222,6 @@ def main() -> None:
                 print("Invalid command. Please use the format 'graph [type] [range1] [range2]'.")
                 continue
             spreadsheet.create_graph(graph_type, range1, range2)
-
 
 
 if __name__ == "__main__":
