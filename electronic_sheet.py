@@ -12,6 +12,7 @@ class Cell:
     def __init__(self, value: Optional[Any] = None, formula: Optional[str] = None) -> None:
         """
         Initializes a new Cell instance.
+
         :param value: The initial value of the cell.
         if nothing was inserted as value, None as default.
         """
@@ -20,9 +21,19 @@ class Cell:
         self.dependents = set() # Cells that depend on this cell
 
     def add_dependent(self, cell_name: str) -> None:
+        """
+        Adds a cell to the list of cells that depend on this cell.
+
+        :param cell_name: The name of the cell to add.
+        """
         self.dependents.add(cell_name)
 
     def remove_dependent(self, cell_name: str) -> None:
+        """
+        Removes a cell from the list of cells that depend on this cell.
+        :param cell_name: The name of the cell to remove.
+        """
+
         if cell_name in self.dependents:
             self.dependents.remove(cell_name)
 
@@ -30,6 +41,7 @@ class Cell:
         """
         updates the cell's value. If the cell contains a formula, insert the formula,
         otherwise returns the cell's current value.
+
         :param spreadsheet: The Spreadsheet object containing this cell.
         :return: The updated value of the cell.
         """
@@ -38,9 +50,20 @@ class Cell:
         return self.value
 
     def set_value(self, value: Any) -> None:
+        """
+       Sets the value of the cell.
+
+       :param value: The value to set.
+       """
+
         self.value = value
 
     def to_dict(self) -> Dict[str, Any]:
+        """
+        Converts the cell to a dictionary.
+
+        :return: A dictionary representation of the cell.
+        """
         return {
             'value': self.value,
             'formula': self.formula,
@@ -48,6 +71,11 @@ class Cell:
         }
 
     def update_dependents(self, dependents: List[str]) -> None:
+        """
+        Updates the list of cells that depend on this cell.
+
+        :param dependents: The new list of dependents.
+        """
         self.dependents = set(dependents)
 
 
@@ -84,7 +112,7 @@ class Spreadsheet:
 
         # Check if the second part of the string consists of digits
         number_part = [digit for digit in cell_name if digit.isdigit()]
-        if not number_part:
+        if not number_part or number_part == ['0']:
             return False
 
         # Check if concatenating the two parts gives the original string
@@ -114,7 +142,7 @@ class Spreadsheet:
         if not self.cells:
             return "The spreadsheet is empty."
 
-        # Identify the max column and row
+            # Identify the max column and row
         max_col_index = 0
         max_row = 0
         for cell_name in self.cells.keys():
@@ -147,6 +175,16 @@ class Spreadsheet:
         return '\n'.join(rows)
 
     def set_cell(self, cell_name: str, value: Optional[Any] = None, formula: Optional[str] = None) -> None:
+        """
+        Sets the value or formula of a cell in the spreadsheet.
+        If the cell does not exist, it is created.
+        If a value is provided, the cell's formula (if any) is removed.
+        If a formula is provided, the cell's value is updated based on the formula.
+
+        :param cell_name: The name of the cell to set.
+        :param value: The value to set in the cell.
+        :param formula: The formula to set in the cell.
+        """
         if not self.is_valid_cell_name(cell_name):
             print(f"Invalid cell name '{cell_name}'."
                   f" Cell names must be in the format 'A1', 'B2', 'AZ10' etc.")
@@ -166,12 +204,30 @@ class Spreadsheet:
             self.set_cell_formula(cell, cell_name, formula)
 
     def set_cell_value(self, cell: Cell, value: Any) -> None:
+        """
+        Sets the value of a cell in the spreadsheet.
+        If the value can be converted to a float, it is stored as a float.
+        Otherwise, it is stored as is.
+
+        :param cell: The cell to set the value for.
+        :param value: The value to set in the cell.
+        """
         try:
             cell.set_value(float(value))
         except:
             cell.value = value
 
     def set_cell_formula(self, cell: Cell, cell_name: str, formula: str) -> None:
+        """
+        Sets the formula of a cell in the spreadsheet.
+        If the formula is a cell name, the cell's value is updated based on the referenced cell's value.
+        If the formula is a range of cells, the cell's value is updated based on the values of the cells in the range.
+
+        :param cell: The cell to set the formula for.
+        :param cell_name: The name of the cell to set the formula for.
+        :param formula: The formula to set in the cell.
+        """
+
         if self.is_valid_cell_name(formula):  # If the formula is just a cell name
             referenced_cell = self.get_cell(formula)
             if formula == cell_name:
@@ -207,6 +263,7 @@ class Spreadsheet:
     def get_cell(self, cell_name: str) -> Optional[Cell]:
         """
         retrieves a Cell object from the cell's dictionary.
+
         :param cell_name: The name of the cell to retrieve.
         :return: The Cell object if found, None otherwise.
         """
@@ -219,9 +276,11 @@ class Spreadsheet:
 
     def get_cell_value(self, cell_name: str) -> Any:
         """
-        Retrieves the evaluated value of a cell.
-        :param cell_name: The name of the cell to evaluate.
-        :return: The evaluated value of the cell or an error message if the cell does not exist.
+        Retrieves the value of a cell in the spreadsheet.
+        If the cell has a formula, the formula is evaluated and the result is returned.
+
+        :param cell_name: The name of the cell to retrieve the value for.
+        :return: The value of the cell, or an error message if the cell does not exist.
         """
         if not self.is_valid_cell_name(cell_name):
             print(f"Invalid cell name '{cell_name}'." 
@@ -240,6 +299,7 @@ class Spreadsheet:
         """
         regular formula stands for formulas with one/two cells and regular operation (*,/,+,-)
         for example: "A1/A2", "A3*4"
+
         :param formula: a string with the formula
         :return: the answer of the formula. if the formula doesnt meet the string requirements, None.
         """
@@ -286,12 +346,13 @@ class Spreadsheet:
 
     def evaluate_formula(self, formula: str) -> Any:
         """
-        calculates a given formula represented as a string.
-        :param formula: A string formula, for example: "A1 + B1", "AVERAGE(A1:B2)", "MIN(B1:Z3)"
-        :return: The result of the formula calculation.
-        :If the formula is invalid or contains unknown operations, it returns None
-        and prints a message to the user.
+        Evaluates a formula in the spreadsheet.
+        The formula can be a regular formula, or a special formula like "AVERAGE", "SUM", "MIN", "MAX", or "SQRT".
+
+        :param formula: The formula to evaluate.
+        :return: The result of the formula, or an error message if the formula is invalid.
         """
+
 
         if formula.startswith("AVERAGE"):
             try:
@@ -336,6 +397,7 @@ class Spreadsheet:
     def cells_values_list(self, start: str, end: str) -> Any:
         """
         Retrieves a list with all the values in a given range
+
         :param start: The starting cell name of the range.
         :param end: The ending cell name of the range.
         :return: list of values of all the cells in the range
@@ -352,6 +414,7 @@ class Spreadsheet:
     def find_min(self, start: str, end: str) -> Any:
         """
         finds the minimum cell value in a specific range that was given
+
         :param start: The starting cell name of the range.
         :param end: The ending cell name of the range.
         :return: float: the minimum value in the range.
@@ -365,6 +428,7 @@ class Spreadsheet:
     def find_max(self, start: str, end: str) -> Any:
         """
         finds the maximum cell value in a specific range that was given
+
         :param start: The starting cell name of the range.
         :param end: The ending cell name of the range.
         :return: float: the maximum value in the range.
@@ -377,6 +441,7 @@ class Spreadsheet:
     def calculate_sum(self, start: str, end: str) -> Any:
         """
         calculates the sum of cells values in a specific range that was given
+
         :param start: The starting cell name of the range.
         :param end: The ending cell name of the range.
         :return: float: the sum of all the values in the range.
@@ -393,9 +458,9 @@ class Spreadsheet:
         """
         gets a string with specific formula.
         Retrieves the specific 2 cells that in the formula.
+
         :param formula: a string of an operation and 2 specific cells to check the range between them.
-        :return: the 2 cells that in the formula.
-        for example:  ("AVERAGE(A1:B2)" -> ("A1", "B2")
+        :return: the 2 cells that in the formula. for example:  ("AVERAGE(A1:B2)" -> ("A1", "B2")
         """
         for index in range(len(formula)):
             if formula[index] == "(":
@@ -410,6 +475,7 @@ class Spreadsheet:
     def calculate_average(self, start: str, end: str) -> Any:
         """
         Calculates the average value of cells in a specified range, ignoring cells with no value.
+
         :param start: The starting cell name of the range.
         :param end: The ending cell name of the range.
         :return None if any cell was not found, else,
@@ -428,6 +494,7 @@ class Spreadsheet:
         """
         Converts a column letter (LIKE "A") to an integer index (for example, "A" -> "0").
         for example: "A" -> 0, "B" -> 1, "AA" - 26
+
         :param col: a col as a string
         :return the col's index as integer
         """
@@ -441,6 +508,7 @@ class Spreadsheet:
         """
         Converts an integer index to a column letter (for example, 0 -> "A").
         for example: 0 -> "A", 1 -> "B", 26 - "AA"
+
         :param index: the col's index as integer
         :return the col's string
         """
@@ -458,16 +526,6 @@ class Spreadsheet:
         :param start: The starting cell name of the range.
         :param end: The ending cell name of the range.
         :return List[str]: A list of cell names within the specified range.
-        """
-        """
-        # Separates the letters and digits in each cell
-        start_col = [letter for letter in start if letter.isalpha()]
-        end_col = [letter for letter in end if letter.isalpha()]
-        start_row = [digit for digit in start if digit.isdigit()]
-        end_row = [digit for digit in end if digit.isdigit()]
-        # Translates the col index into an integer
-        start_col_index = self.col_letter_to_index(start_col[0])
-        end_col_index = self.col_letter_to_index(end_col[0])
         """
         # Use regular expressions to separate the letters and digits in each cell
         start_col, start_row = re.match(r"([A-Z]+)([0-9]+)", start).groups()
@@ -490,6 +548,12 @@ class Spreadsheet:
         return cells
 
     def remove_cell(self, cell_name: str) -> None:
+        """
+        Removes a cell from the spreadsheet.
+        If the cell has a formula, it is also removed from the dependents of other cells.
+
+        :param cell_name: The name of the cell to remove.
+        """
         if cell_name in self.cells:
             cell = self.get_cell(cell_name)
             if cell.formula:
@@ -505,7 +569,9 @@ class Spreadsheet:
 
     def max_row(self) -> int:
         """
-        Returns the maximum row index that has been used in the spreadsheet.
+        Retrieves the maximum row index that has been used in the spreadsheet.
+
+        :return: The maximum row index.
         """
         if not self.cells:  # If there are no cells, return 0
             return 0
@@ -515,7 +581,9 @@ class Spreadsheet:
 
     def max_col_index(self) -> int:
         """
-        Returns the maximum column index that has been used in the spreadsheet.
+        Retrieves the maximum column index that has been used in the spreadsheet.
+
+        :return: The maximum column index.
         """
         if not self.cells:
             return 0
@@ -523,12 +591,23 @@ class Spreadsheet:
         return max(cols)
 
     def to_dict(self) -> Dict[str, Dict[str, Any]]:
+        """
+        Converts the spreadsheet to a dictionary.
+
+        :return: A dictionary representation of the spreadsheet.
+        """
         return {
             cell_name: cell.to_dict() for cell_name, cell in self.cells.items()
         }
 
     def create_graph(self, graph_type: str, x_range: str, y_range: str) -> None:
+        """
+        Creates a graph based on the values of the cells in two ranges in the spreadsheet.
 
+        :param graph_type: The type of the graph to create. Can be "bar" or "pie".
+        :param x_range: The range of cells to use for the x-axis of the graph.
+        :param y_range: The range of cells to use for the y-axis of the graph.
+        """
         try:
             # Get the cell names for the x and y data
             x_cells = self.get_range_cells(*x_range.split(':'))

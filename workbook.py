@@ -14,6 +14,8 @@ class Workbook:
     def __init__(self, name: Optional[str] = None) -> None:
         """
         Initializes a new workbook with an empty dictionary of sheets.
+
+        :param name: The name of the workbook. If not provided, the workbook will be unnamed.
         """
         self.sheets = {}
         self.name = name
@@ -21,6 +23,8 @@ class Workbook:
     def add_sheet(self, sheet_name: str) -> None:
         """
         Adds a new spreadsheet to the workbook with the given name.
+        If a sheet with the same name already exists, a message is printed and no sheet is added.
+
         :param sheet_name: The name of the new sheet. Must be unique within the workbook.
         """
         if sheet_name in self.sheets:
@@ -32,6 +36,8 @@ class Workbook:
     def remove_sheet(self, sheet_name: str) -> None:
         """
         Removes the spreadsheet with the given name from the workbook, if it exists.
+        If the sheet does not exist, a message is printed and no sheet is removed.
+
         :param sheet_name: The name of the sheet to be removed.
         """
         if sheet_name in self.sheets:
@@ -43,6 +49,8 @@ class Workbook:
     def get_sheet(self, sheet_name: str) -> Optional[Spreadsheet]:
         """
         Retrieves the spreadsheet with the given name, if it exists.
+        If the sheet does not exist, None is returned.
+
         :param sheet_name: The name of the sheet to retrieve.
         :return: The Spreadsheet object with the given name, or None if it does not exist.
         """
@@ -57,6 +65,9 @@ class Workbook:
         return list(self.sheets.keys())
 
     def print_list(self) -> None:
+        """
+        Prints the names of all spreadsheets in the workbook to the console.
+        """
         print("Sheets in the workbook:")
         for name in self.sheets.keys():
             print(name)
@@ -64,6 +75,8 @@ class Workbook:
     def rename_sheet(self, old_name: str, new_name: str) -> None:
         """
         Renames an existing sheet from old_name to new_name, if old_name exists and new_name does not.
+        If old_name does not exist or new_name already exists, a message is printed and no sheet is renamed.
+
         :param old_name: The current name of the sheet to be renamed.
         :param new_name: The new name for the sheet.
         """
@@ -76,14 +89,22 @@ class Workbook:
             print(f"Sheet '{old_name}' has been renamed to '{new_name}'.")
 
     def to_dict(self) -> Dict[str, Dict[str, Any]]:
+        """
+        Converts the workbook to a dictionary where each key is a sheet name and each value is a dictionary representation of the corresponding sheet.
+        :return: A dictionary representation of the workbook.
+        """
         return {sheet_name: sheet.to_dict() for sheet_name, sheet in self.sheets.items()}
 
     def dict_print(self) -> None:
+        """
+        Prints the dictionary representation of the workbook to the console.
+        """
         print(self.to_dict())
 
     def export_to_json(self, filename: str) -> None:
         """
         Saves the workbook to a file in JSON format.
+
         :param filename: The name of the file to save the workbook to.
         """
         workbook_dict = {name: sheet.to_dict() for name, sheet in self.sheets.items()}
@@ -93,8 +114,12 @@ class Workbook:
     def export_to_pdf(self, filename: str) -> None:
         """
         Exports the workbook to a PDF file, with a table-like appearance including grid lines and row numbers.
-        :param filename: The name of the PDF file to be created.
+        Each sheet is saved to a separate PDF file.
+
+        :param filename: The base name of the PDF files to be created.
+        The sheet name and .pdf extension are added automatically.
         """
+
         for sheet_name, spreadsheet in self.sheets.items():
             c = canvas.Canvas(f"{filename}_{sheet_name}.pdf", pagesize=letter)
             width, height = letter
@@ -139,8 +164,12 @@ class Workbook:
     def export_to_csv(self, filename: str) -> None:
         """
         Exports the workbook to a CSV file.
-        :param filename: The name of the CSV file to be created.
+        Each sheet is saved to a separate CSV file.
+
+        :param filename: The base name of the CSV files to be created.
+        The sheet name and .csv extension are added automatically.
         """
+
         for sheet_name, spreadsheet in self.sheets.items():
             with open(f"{filename}_{sheet_name}.csv", 'w', newline='') as f:
                 writer = csv.writer(f)
@@ -152,7 +181,8 @@ class Workbook:
     def export_to_excel(self, filename: str) -> None:
         """
         Exports the workbook to an Excel file.
-        :param filename: The name of the Excel file to be created.
+        Each sheet is saved to a separate tab in the Excel file.
+        :param filename: The name of the Excel file to be created. The .xlsx extension is added automatically.
         """
         workbook = xlsxwriter.Workbook(f"{filename}.xlsx")
 
@@ -171,7 +201,10 @@ class Workbook:
 def load_and_open_workbook(filename: str) -> Workbook:
     """
     Loads a workbook file and opens it for editing.
+    The file is expected to be in JSON format,
+    with each key being a sheet name and each value being a dictionary representation of the corresponding sheet.
     :param filename: The name of the workbook file to be opened.
+    The .json extension is expected to be included in the filename.
     :return: The loaded Workbook instance.
     """
     with open(filename, 'r') as f:  # Open the JSON file
