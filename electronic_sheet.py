@@ -6,7 +6,12 @@ import matplotlib.pyplot as plt
 LETTERS_NUM = 26
 ALL_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 ALL_DIGITS = "0123456789"
-
+GRAPH_ERROR = "Invalid range. Please use the format 'graph [type] [range1] [range2]'.\n"\
+              "For example: 'graph line A1:A10 B1:B10'\n"\
+              "Supported graph types: 'bar', 'pie'\n"\
+              "the first range should be the x-axis - represent topics\n"\
+              "the second range should be the y-axis - represent values.\n"\
+              "the column letter in the start/end range should be the same."
 class Cell:
     """
     Represents a single cell in a Spreadsheet.
@@ -20,7 +25,8 @@ class Cell:
         """
         self.value = value
         self.formula = formula
-        self.dependents = set() # Cells that depend on this cell
+        # Cells that depend on this cell
+        self.dependents = set()
 
     def add_dependent(self, cell_name: str) -> None:
         """
@@ -229,6 +235,10 @@ class Spreadsheet:
         :param cell_name: The name of the cell to set the formula for.
         :param formula: The formula to set in the cell.
         """
+        if isinstance(formula, int) or isinstance(formula, float):
+            cell.value = formula
+            cell.formula = None
+            return
         # Check if the formula is a cell name
         if self.is_valid_cell_name(formula):
             referenced_cell = self.get_cell(formula)
@@ -667,6 +677,7 @@ class Spreadsheet:
             cell_name: cell.to_dict() for cell_name, cell in self.cells.items()
         }
 
+
     def create_graph(self, graph_type: str, x_range: str, y_range: str) -> None:
         """
         Creates a graph based on the values of the cells in two ranges in the spreadsheet.
@@ -679,6 +690,10 @@ class Spreadsheet:
             # Get the cell names for the x and y data
             x_cells = self.get_range_cells(*x_range.split(':'))
             y_cells = self.get_range_cells(*y_range.split(':'))
+
+            if not x_cells or not y_cells:
+                print(GRAPH_ERROR)
+                return
 
             # Retrieve the values of these cells
             x_data = [self.get_cell(cell).value for cell in x_cells]
@@ -703,12 +718,7 @@ class Spreadsheet:
 
         except Exception as e:
             print(f"An error occurred while creating the graph: {str(e)}")
-            print("Invalid command. Please use the format 'graph [type] [range1] [range2]'.\n"
-                  "For example: 'graph line A1:A10 B1:B10'\n"
-                  "Supported graph types: 'bar', 'pie'\n"
-                  "the first range should be the x-axis - represent topics\n"
-                  "the second range should be the y-axis - represent values.\n"
-                  "the column letter in the start/end range should be the same.")
+            print(GRAPH_ERROR)
             return
 
 

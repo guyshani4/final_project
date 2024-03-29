@@ -25,8 +25,9 @@ HELP_TEXT = """
                     the first range needs to include one columns that represent the topics of the graph.
                     the second range needs to include one column that represent the values of the topics.
             """
-
 VALID_FILE_FORMATS = ["csv", "pdf", "excel"]
+
+
 def get_spreadsheet() -> Tuple[Workbook, Spreadsheet]:
     """
     Prompts the user to either open an existing workbook or create a new one.
@@ -49,11 +50,27 @@ def get_spreadsheet() -> Tuple[Workbook, Spreadsheet]:
         while True:
             try:
                 filename = input("Enter the file you want to open: ")
+                if filename == "":
+                    print("Please enter a valid file name.")
+                    continue
+                if not filename.endswith(".json"):
+                    print("The file should be in json format.")
+                    continue
             except EOFError:
                 break
             try:
                 workbook = load_and_open_workbook(filename)
                 print(f"Opened {filename} successfully.")
+                break
+            except FileNotFoundError:
+                print("File not found. Please try again.")
+                continue
+            except PermissionError:
+                print(f"The file {filename} is not accessible.")
+                continue
+            except json.JSONDecodeError:
+                print("The file is not a valid json file.")
+                continue
             except:
                 print("it seems like the file does not fit the requirements.")
                 continue
@@ -62,9 +79,11 @@ def get_spreadsheet() -> Tuple[Workbook, Spreadsheet]:
             sheet_name = input("which sheet would you like to open? ")
             while sheet_name not in workbook.list_sheets():
                 sheet_name = input("name did not found..."
-                                   "which sheet would you like to open? ")
+                                   "which sheet would you like to open?")
             spreadsheet = workbook.get_sheet(sheet_name)
-            print(f"You're in {sheet_name} sheet. Type 'help' for options, or start editing.")
+            print(f"You're in {sheet_name} sheet.")
+            print(spreadsheet.name + ": ")
+            print(spreadsheet)
         except EOFError:
             pass
     else:
@@ -74,7 +93,7 @@ def get_spreadsheet() -> Tuple[Workbook, Spreadsheet]:
             workbook = Workbook(workbook_name)
             sheet_name = input("type the name of the first sheet in your project? ")
             workbook.add_sheet(sheet_name)
-            print(f"You're in {sheet_name} sheet. Type 'help' for options, or start editing.")
+            print(f"You're in {sheet_name} sheet.")
             spreadsheet = workbook.get_sheet(sheet_name)
         except EOFError:
             pass
@@ -91,8 +110,8 @@ def main() -> None:
     The user can also enter 'quit' to exit the program, with an option to save the workbook before exiting.
     """
     workbook, spreadsheet = get_spreadsheet()
-    print("Type 'help' for options, or start editing.")
     while True:
+        print("Type 'help' for options, or type a command.")
         try:
             command = input("> ").strip()
         except EOFError:
@@ -129,7 +148,10 @@ def main() -> None:
             try:
                 save_format = input("Please enter the format you want to save the spreadsheet in: ").lower()
                 while save_format not in VALID_FILE_FORMATS:
-                    save_format = input("Invalid format. Please enter either 'csv', 'pdf', or 'json'.").lower()
+                    if save_format == "quit":
+                        break
+                    save_format = input("Invalid format. Please enter either 'csv', 'pdf', or 'json'.\n"
+                                        "if you want to make a different action, type 'quit'.").lower()
             except EOFError:
                 continue
             if save_format.lower() == "csv":
@@ -144,8 +166,12 @@ def main() -> None:
             continue
 
         if command.lower().startswith("set"):
+            command_parts = command.split()
+            if len(command_parts) != 3:
+                print("Invalid command. Please use the format 'set [cell] [value]' or 'set [cell] [formula]'.")
+                continue
             try:
-                _, cell_name, value = command.split(maxsplit=2)
+                _, cell_name, value = command_parts
                 if not spreadsheet.is_valid_cell_name(cell_name):
                     print("Invalid command. Please use a valid cell name.")
                     continue
@@ -159,20 +185,30 @@ def main() -> None:
                 print("for more information type 'help'.")
                 continue
             if spreadsheet.cells != {}:
+                print(spreadsheet.name + ": ")
                 print(spreadsheet)
             continue
 
         if command.lower() == "show":
+            print(spreadsheet.name + ": ")
             print(spreadsheet)
             continue
 
         if command.lower().startswith("remove"):
+            command_parts = command.split()
+            if len(command_parts) != 2:
+                print("Invalid command. Please use the format 'remove [cell]'.")
+                continue
             try:
-                _, cell_name = command.split(maxsplit=1)
+                _, cell_name = command_parts
+                if not spreadsheet.is_valid_cell_name(cell_name):
+                    print("Invalid command. Please use a valid cell name.")
+                    continue
             except ValueError:
                 print("Invalid command. Please use the format 'remove [cell]'.")
                 continue
             spreadsheet.remove_cell(cell_name)
+            print(spreadsheet.name + ": ")
             print(spreadsheet)
             continue
 
@@ -183,7 +219,7 @@ def main() -> None:
                 continue
             workbook.add_sheet(sheet_name)
             spreadsheet = workbook.get_sheet(sheet_name)
-            print(f"You're in {sheet_name} sheet. Type 'help' for options, or start editing.")
+            print(f"You're in {sheet_name} sheet.")
             continue
 
         if command.lower().startswith("sheets"):
@@ -191,13 +227,17 @@ def main() -> None:
             try:
                 sheet_name = input("which sheet would you like to open? ")
                 while sheet_name not in workbook.list_sheets():
+                    if sheet_name == "quit":
+                        break
                     workbook.print_list()
                     sheet_name = input("name did not found..."
-                                       "which sheet would you like to open? ")
+                                       "which sheet would you like to open?\n"
+                                       "if you want to make a different action type 'quit'")
             except EOFError:
                 continue
             spreadsheet = workbook.get_sheet(sheet_name)
-            print(f"You're in {sheet_name} sheet. Type 'help' for options, or start editing.")
+            print(f"You're in {sheet_name} sheet.")
+            print(spreadsheet.name + ": ")
             print(spreadsheet)
             continue
 
@@ -206,14 +246,17 @@ def main() -> None:
             try:
                 sheet_name = input("which sheet would you like to rename? ")
                 while sheet_name not in workbook.list_sheets():
-                    sheet_name = input("name did not found..."
-                                       "which sheet would you like to rename? ")
+                    if sheet_name == "quit":
+                        break
+                    sheet_name = input("name did not found in the workbook..."
+                                       "which sheet would you like to rename?\n"
+                                       "if you want to make a different action type 'quit' ")
                 new_name = input("which name would you like to call it? ")
             except EOFError:
                 continue
             workbook.rename_sheet(sheet_name, new_name)
             spreadsheet = workbook.get_sheet(new_name)
-            print(f"You're in {new_name} sheet. Type 'help' for options, or start editing.")
+            print(f"You're in {new_name} sheet.")
             continue
 
         if command.lower() == "remove sheet":
@@ -221,9 +264,12 @@ def main() -> None:
             try:
                 sheet_name = input("which sheet would you like to remove? ")
                 while sheet_name not in workbook.list_sheets():
+                    if sheet_name == "quit":
+                        break
                     workbook.print_list()
                     sheet_name = input("name did not found..."
-                                       "which sheet would you like to remove? ")
+                                       "which sheet would you like to remove?\n"
+                                       "if you want to make a different action type 'quit' ")
             except EOFError:
                 continue
             workbook.remove_sheet(sheet_name)
@@ -237,8 +283,12 @@ def main() -> None:
             continue
 
         if command.lower().startswith("graph"):
+            command_parts = command.split()
+            if len(command_parts) != 4:
+                print("Invalid command. Please use the format 'graph [type] [range1] [range2]'.")
+                continue
             try:
-                _, graph_type, range1, range2 = command.split(maxsplit=3)
+                _, graph_type, range1, range2 = command_parts
             except ValueError:
                 print("Invalid command. Please use the format 'graph [type] [range1] [range2]'.")
                 continue
