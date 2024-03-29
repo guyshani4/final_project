@@ -169,11 +169,13 @@ class Workbook:
         :param filename: The base name of the CSV files to be created.
         The sheet name and .csv extension are added automatically.
         """
-
+        # Iterate over each sheet in the workbook
         for sheet_name, spreadsheet in self.sheets.items():
+            # Open a new CSV file for each sheet
             with open(f"{filename}_{sheet_name}.csv", 'w', newline='') as f:
                 writer = csv.writer(f)
                 for i in range(1, spreadsheet.max_row() + 1):
+                    # For each row, create a list of cell values
                     row = [spreadsheet.get_cell_value(f"{spreadsheet.col_index_to_letter(j)}{i}")
                            for j in range(1, spreadsheet.max_col_index() + 1)]
                     writer.writerow(row)
@@ -184,15 +186,18 @@ class Workbook:
         Each sheet is saved to a separate tab in the Excel file.
         :param filename: The name of the Excel file to be created. The .xlsx extension is added automatically.
         """
-        workbook = xlsxwriter.Workbook(f"{filename}.xlsx")
 
+        # Create a new Excel workbook
+        workbook = xlsxwriter.Workbook(f"{filename}.xlsx")
+        # Iterate over each sheet in the workbook
         for sheet_name, spreadsheet in self.sheets.items():
             worksheet = workbook.add_worksheet(sheet_name)
-
+            # Iterate over each cell in the sheet
             for i in range(1, spreadsheet.max_row() + 1):
                 for j in range(spreadsheet.max_col_index() + 1):
                     cell_name = f"{spreadsheet.col_index_to_letter(j)}{i}"
                     cell_value = spreadsheet.get_cell_value(cell_name)
+                    # Write the cell value to the Excel worksheet
                     worksheet.write(i - 1, j, cell_value)
 
         workbook.close()
@@ -207,19 +212,25 @@ def load_and_open_workbook(filename: str) -> Workbook:
     The .json extension is expected to be included in the filename.
     :return: The loaded Workbook instance.
     """
-    with open(filename, 'r') as f:  # Open the JSON file
-        workbook_dict = json.load(f)  # Load the JSON file into a Python dictionary
-    workbook_name = filename.rsplit('.', 1)[0]  # Remove the .json extension from the filename
-    workbook = Workbook(workbook_name)  # Create a new Workbook object
-    for sheet_name, sheet_data in workbook_dict.items():  # Iterate over the dictionary
-        spreadsheet = Spreadsheet(sheet_name)  # Create a new Spreadsheet object for each sheet
-        for cell_name, cell_data in sheet_data.items():  # Iterate over the sheet data
+    # Open the JSON file
+    with open(filename, 'r') as f:
+        workbook_dict = json.load(f)
+    # Remove the .json extension from the filename
+    workbook_name = filename.rsplit('.', 1)[0]
+    workbook = Workbook(workbook_name)
+    # Iterate over the dictionary
+    for sheet_name, sheet_data in workbook_dict.items():
+        spreadsheet = Spreadsheet(sheet_name)
+        for cell_name, cell_data in sheet_data.items():
             value = cell_data.get('value')
             formula = cell_data.get('formula')
             dependents = cell_data.get('dependents', [])
             cell = Cell(value=value, formula=formula)
-            cell.update_dependents(dependents)  # Update the cell's dependents
-            spreadsheet.cells[cell_name] = cell  # Set the cell in the Spreadsheet object
-        workbook.sheets[sheet_name] = spreadsheet  # Add the Spreadsheet object to the workbook
+            # Update the cell's dependents
+            cell.update_dependents(dependents)
+            # Set the cell in the Spreadsheet object
+            spreadsheet.cells[cell_name] = cell
+        # Add the Spreadsheet object to the workbook
+        workbook.sheets[sheet_name] = spreadsheet
 
     return workbook
