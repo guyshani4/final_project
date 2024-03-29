@@ -2,8 +2,10 @@ import re
 import math
 from typing import *
 import matplotlib.pyplot as plt
-LETTERS_NUM = 26
 
+LETTERS_NUM = 26
+ALL_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+ALL_DIGITS = "0123456789"
 
 class Cell:
     """
@@ -147,7 +149,7 @@ class Spreadsheet:
         max_row = 0
         for cell_name in self.cells.keys():
             try:
-                col, row = cell_name.rstrip('0123456789'), int(cell_name.lstrip("ABCDEFGHIJKLMNOPQRSTUVWXYZ"))
+                col, row = cell_name.rstrip(ALL_DIGITS), int(cell_name.lstrip(ALL_LETTERS))
                 col_index = self.col_letter_to_index(col)
                 max_col_index = max(max_col_index, col_index)
                 max_row = max(max_row, row)
@@ -227,8 +229,8 @@ class Spreadsheet:
         :param cell_name: The name of the cell to set the formula for.
         :param formula: The formula to set in the cell.
         """
-
-        if self.is_valid_cell_name(formula):  # If the formula is just a cell name
+        # Check if the formula is a valid cell name
+        if self.is_valid_cell_name(formula):
             referenced_cell = self.get_cell(formula)
             if formula == cell_name:
                 print("The cell cannot be dependent on itself.")
@@ -238,6 +240,8 @@ class Spreadsheet:
                 cell.formula = formula
                 cell.dependencies = [formula]
         else:
+            # If the formula is not a valid cell name, it might be a range of cells,
+            # unless it's a SQRT formula
             if len(formula) >= 5:
                 if formula.startswith("SQRT"):
                     if not self.is_valid_cell_name(formula):
@@ -245,9 +249,12 @@ class Spreadsheet:
                               "For example: 'SQRT(A1)'.")
                     dependencies = [formula[5:-1]]
                 else:
+                    # Get the range of cells from the formula
                     cells = self.valid_cells_index(formula)
+                    # Get the list of cell names in the range
                     dependencies = self.get_range_cells(cells[0], cells[1])
             else:
+                # If the formula is not a range of cells, it might be a single cell
                 dependencies = [formula[:2]]
             if cell_name in dependencies:
                 print("The cell cannot be dependent on itself.")
@@ -255,6 +262,7 @@ class Spreadsheet:
             for dep_name in dependencies:
                 if dep_name not in self.cells:
                     self.cells[dep_name] = Cell()
+                # Add the cell to the dependents of the referenced cells
                 self.cells[dep_name].add_dependent(cell_name)
             cell.formula = formula
             cell.value = cell.calculated_value(self)
@@ -352,44 +360,60 @@ class Spreadsheet:
         :param formula: The formula to evaluate.
         :return: The result of the formula, or an error message if the formula is invalid.
         """
-
-
+        # Check if the formula starts with "AVERAGE"
         if formula.startswith("AVERAGE"):
             try:
+                # Extract the range of cells from the formula
                 cells = self.valid_cells_index(formula)
+                # Calculate and return the average of the cells in the range
                 return self.calculate_average(cells[0], cells[1])
             except Exception as err:
                 print(f"Error: {str(err)}")
                 return
+        # Check if the formula starts with "SUM"
         if formula.startswith("SUM"):
             try:
+                # Extract the range of cells from the formula
                 cells = self.valid_cells_index(formula)
+                # Calculate and return the sum of the cells in the range
                 return self.calculate_sum(cells[0], cells[1])
             except Exception as err:
                 print(f"Error: {str(err)}")
                 return
+
+        # Check if the formula starts with "MIN"
         if formula.startswith("MIN"):
             try:
+                # Extract the range of cells from the formula
                 cells = self.valid_cells_index(formula)
+                # Find and return the minimum value in the range
                 return self.find_min(cells[0], cells[1])
             except Exception as err:
                 print(f"Error: {str(err)}")
                 return
+
+        # Check if the formula starts with "MAX"
         if formula.startswith("MAX"):
             try:
+                # Extract the range of cells from the formula
                 cells = self.valid_cells_index(formula)
+                # Find and return the maximum value in the range
                 return self.find_max(cells[0], cells[1])
             except Exception as err:
                 print(f"Error: {str(err)}")
                 return
+        # Check if the formula starts with "SQRT"
         if formula.startswith("SQRT"):
             try:
+                # Extract the cell name from the formula
                 formula = formula[5:-1]
                 value = float(self.get_cell_value(formula))
                 return math.sqrt(value)
             except Exception as err:
                 print(f"Error: {str(err)}")
                 return
+        # If the formula does not start with any of the special keywords,
+        # treat it as a regular formula
         return self.regular_formula(formula)
 
 
@@ -462,12 +486,18 @@ class Spreadsheet:
         :param formula: a string of an operation and 2 specific cells to check the range between them.
         :return: the 2 cells that in the formula. for example:  ("AVERAGE(A1:B2)" -> ("A1", "B2")
         """
+
+        # Iterate over the formula to find the opening parenthesis
         for index in range(len(formula)):
             if formula[index] == "(":
+                # Remove the operation and the opening parenthesis from the formula
                 formula = formula[index+1:]
                 break
+        # Remove the closing parenthesis from the formula
         formula = formula.replace(")", "")
+        # Split the formula into two cell names
         cell_list = formula.split(":")
+        # Check if the formula contains exactly two cell names
         if len(cell_list) != 2:
             print("the formula does not fit the requirements")
         return cell_list[0], cell_list[1]
@@ -573,9 +603,10 @@ class Spreadsheet:
 
         :return: The maximum row index.
         """
-        if not self.cells:  # If there are no cells, return 0
+        # If there are no cells, return 0
+        if not self.cells:
             return 0
-        rows = [int(cell.lstrip("ABCDEFGHIJKLMNOPQRSTUVWXYZ")) for cell in self.cells.keys()]
+        rows = [int(cell.lstrip(ALL_LETTERS)) for cell in self.cells.keys()]
         return max(rows)
 
 
@@ -585,9 +616,10 @@ class Spreadsheet:
 
         :return: The maximum column index.
         """
+        # If there are no cells, return 0
         if not self.cells:
             return 0
-        cols = [self.col_letter_to_index(cell.rstrip('0123456789')) for cell in self.cells.keys()]
+        cols = [self.col_letter_to_index(cell.rstrip(ALL_DIGITS)) for cell in self.cells.keys()]
         return max(cols)
 
     def to_dict(self) -> Dict[str, Dict[str, Any]]:
