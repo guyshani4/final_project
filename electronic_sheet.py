@@ -229,7 +229,7 @@ class Spreadsheet:
         :param cell_name: The name of the cell to set the formula for.
         :param formula: The formula to set in the cell.
         """
-        # Check if the formula is a valid cell name
+        # Check if the formula is a cell name
         if self.is_valid_cell_name(formula):
             referenced_cell = self.get_cell(formula)
             if formula == cell_name:
@@ -240,22 +240,38 @@ class Spreadsheet:
                 cell.formula = formula
                 cell.dependencies = [formula]
         else:
-            # If the formula is not a valid cell name, it might be a range of cells,
+            # If the formula is not a cell name, it might be a range of cells,
             # unless it's a SQRT formula
-            if len(formula) >= 5:
-                if formula.startswith("SQRT"):
-                    if not self.is_valid_cell_name(formula):
-                        print("SQRT formula must be in the format 'SQRT(cell)'.\n"
-                              "For example: 'SQRT(A1)'.")
-                    dependencies = [formula[5:-1]]
-                else:
-                    # Get the range of cells from the formula
-                    cells = self.valid_cells_index(formula)
-                    # Get the list of cell names in the range
+            dependencies = []
+            if formula.startswith("SQRT"):
+                # Iterate over the formula to find the opening parenthesis
+                for index in range(len(formula)):
+                    if formula[index] == "(":
+                        # Remove the operation and the opening parenthesis from the formula
+                        check_formula = formula[index + 1:]
+                        # Remove the closing parenthesis from the formula
+                        check_formula = check_formula.replace(")", "")
+                        if not self.is_valid_cell_name(check_formula):
+                            print("SQRT formula must be in the format 'SQRT(cell)'.\n"
+                                  "For example: 'SQRT(A1)'.")
+                        else:
+                            dependencies.append(check_formula)
+                        break
+            if ":" in formula:
+                cells = self.valid_cells_index(formula)
+                # Get the list of cell names in the range
+                if cells:
                     dependencies = self.get_range_cells(cells[0], cells[1])
             else:
                 # If the formula is not a range of cells, it might be a single cell
-                dependencies = [formula[:2]]
+                for index, sign in enumerate(formula):
+                    if sign in ['*', '/', '+', '-']:
+                        parts = [formula[:index], sign, formula[index+1]]
+                        if self.is_valid_cell_name(parts[0]):
+                            dependencies.append(parts[0])
+                        if self.is_valid_cell_name(parts[2]):
+                            dependencies.append(parts[2])
+                        break
             if cell_name in dependencies:
                 print("The cell cannot be dependent on itself.")
                 return
@@ -266,6 +282,8 @@ class Spreadsheet:
                 self.cells[dep_name].add_dependent(cell_name)
             cell.formula = formula
             cell.value = cell.calculated_value(self)
+            if cell.value is None:
+                return
 
 
     def get_cell(self, cell_name: str) -> Optional[Cell]:
@@ -309,14 +327,22 @@ class Spreadsheet:
         for example: "A1/A2", "A3*4"
 
         :param formula: a string with the formula
-        :return: the answer of the formula. if the formula doesnt meet the string requirements, None.
+        :return: the answer of the formula. if the formula doesn't meet the string requirements, None.
         """
+        # Iterate over the formula to find the opening parenthesis
+        for index in range(len(formula)):
+            if formula[index] == "(":
+                # Remove the operation and the opening parenthesis from the formula
+                formula = formula[index + 1:]
+                break
+        # Remove the closing parenthesis from the formula
+        formula = formula.replace(")", "")
         if self.is_valid_cell_name(formula):
             return self.get_cell_value(formula)
         parts = []
         for index, sign in enumerate(formula):
             if sign in ['*', '/', '+', '-']:
-                parts = [formula[:index], sign, formula[index+1]]
+                parts = [formula[:index], sign, formula[index+1:]]
         if len(parts) == 3:
             side1, operation, side2 = parts
             # Try converting the first operand to a number, if it fails, treat it as a cell reference
@@ -324,11 +350,16 @@ class Spreadsheet:
                 value1 = float(side1)
             except ValueError:
                 value1 = self.get_cell_value(side1)
+                if not isinstance(value1, int) and not isinstance(value1, float):
+                    return
             # Repeat the process for the second operand
             try:
                 value2 = float(side2)
             except ValueError:
                 value2 = self.get_cell_value(side2)
+                if not isinstance(value2, int) and not isinstance(value2, float):
+
+                    return
             if value2 is None or value1 is None:
                 return
             # checks the operation
@@ -478,7 +509,7 @@ class Spreadsheet:
                 return f"Error: {str(err)}"
         return
 
-    def valid_cells_index(self, formula: str) -> Tuple[str, str]:
+    def valid_cells_index(self, formula: str) -> Any:
         """
         gets a string with specific formula.
         Retrieves the specific 2 cells that in the formula.
@@ -500,6 +531,7 @@ class Spreadsheet:
         # Check if the formula contains exactly two cell names
         if len(cell_list) != 2:
             print("the formula does not fit the requirements")
+            return
         return cell_list[0], cell_list[1]
 
     def calculate_average(self, start: str, end: str) -> Any:
@@ -557,6 +589,9 @@ class Spreadsheet:
         :param end: The ending cell name of the range.
         :return List[str]: A list of cell names within the specified range.
         """
+        if not self.is_valid_cell_name(start) or not self.is_valid_cell_name(end):
+            print(f"Invalid cell name. Cell names must be in the format 'A1', 'B2', 'AZ10' etc.")
+            return
         # Use regular expressions to separate the letters and digits in each cell
         start_col, start_row = re.match(r"([A-Z]+)([0-9]+)", start).groups()
         end_col, end_row = re.match(r"([A-Z]+)([0-9]+)", end).groups()

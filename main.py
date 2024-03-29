@@ -26,7 +26,6 @@ HELP_TEXT = """
                     the second range needs to include one column that represent the values of the topics.
             """
 
-VALID_COMMANDS = ["set", "quit", "show", "remove", "new", "sheets", "rename sheet", "remove sheet", "save", "export", "graph"]
 VALID_FILE_FORMATS = ["csv", "pdf", "excel"]
 def get_spreadsheet() -> Tuple[Workbook, Spreadsheet]:
     """
@@ -98,9 +97,6 @@ def main() -> None:
             command = input("> ").strip()
         except EOFError:
             break
-        if command.lower() not in VALID_COMMANDS:
-            print("Invalid command. Type 'help' for options.")
-            continue
         if command.lower() == "quit":
             try:
                 if input("Are you sure you want to quit? ").lower() == "yes":
@@ -253,8 +249,7 @@ if __name__ == "__main__":
     try:
         if sys.argv[1] == "--help":
             print(HELP_TEXT)
-        else:
             main()
     except IndexError:
         pass
-
+    main()
