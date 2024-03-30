@@ -111,6 +111,48 @@ class Workbook:
         with open(filename + ".json", 'w') as f:
             json.dump(workbook_dict, f)
 
+
+    def export_to_csv(self, filename: str) -> None:
+        """
+        Exports the workbook to a CSV file.
+        Each sheet is saved to a separate CSV file.
+
+        :param filename: The base name of the CSV files to be created.
+        The sheet name and .csv extension are added automatically.
+        """
+        # Iterate over each sheet in the workbook
+        for sheet_name, spreadsheet in self.sheets.items():
+            # Open a new CSV file for each sheet
+            with open(f"{filename}_{sheet_name}.csv", 'w', newline='') as f:
+                writer = csv.writer(f)
+                for i in range(1, spreadsheet.max_row() + 1):
+                    # For each row, create a list of cell values
+                    row = [spreadsheet.get_cell_value(f"{spreadsheet.col_index_to_letter(j)}{i}")
+                           for j in range(1, spreadsheet.max_col_index() + 1)]
+                    writer.writerow(row)
+
+    def export_to_excel(self, filename: str) -> None:
+        """
+        Exports the workbook to an Excel file.
+        Each sheet is saved to a separate tab in the Excel file.
+        :param filename: The name of the Excel file to be created. The .xlsx extension is added automatically.
+        """
+
+        # Create a new Excel workbook
+        workbook = xlsxwriter.Workbook(f"{filename}.xlsx")
+        # Iterate over each sheet in the workbook
+        for sheet_name, spreadsheet in self.sheets.items():
+            worksheet = workbook.add_worksheet(sheet_name)
+            # Iterate over each cell in the sheet
+            for i in range(1, spreadsheet.max_row() + 1):
+                for j in range(spreadsheet.max_col_index() + 1):
+                    cell_name = f"{spreadsheet.col_index_to_letter(j)}{i}"
+                    cell_value = spreadsheet.get_cell_value(cell_name)
+                    # Write the cell value to the Excel worksheet
+                    worksheet.write(i - 1, j, cell_value)
+
+        workbook.close()
+
     def export_to_pdf(self, filename: str) -> None:
         """
         Exports the workbook to a PDF file, with a table-like appearance including grid lines and row numbers.
@@ -160,47 +202,6 @@ class Workbook:
                     c.rect(x_position - 2, y_position - 2, column_spacing - 4, cell_height, fill=0)
 
             c.save()
-
-    def export_to_csv(self, filename: str) -> None:
-        """
-        Exports the workbook to a CSV file.
-        Each sheet is saved to a separate CSV file.
-
-        :param filename: The base name of the CSV files to be created.
-        The sheet name and .csv extension are added automatically.
-        """
-        # Iterate over each sheet in the workbook
-        for sheet_name, spreadsheet in self.sheets.items():
-            # Open a new CSV file for each sheet
-            with open(f"{filename}_{sheet_name}.csv", 'w', newline='') as f:
-                writer = csv.writer(f)
-                for i in range(1, spreadsheet.max_row() + 1):
-                    # For each row, create a list of cell values
-                    row = [spreadsheet.get_cell_value(f"{spreadsheet.col_index_to_letter(j)}{i}")
-                           for j in range(1, spreadsheet.max_col_index() + 1)]
-                    writer.writerow(row)
-
-    def export_to_excel(self, filename: str) -> None:
-        """
-        Exports the workbook to an Excel file.
-        Each sheet is saved to a separate tab in the Excel file.
-        :param filename: The name of the Excel file to be created. The .xlsx extension is added automatically.
-        """
-
-        # Create a new Excel workbook
-        workbook = xlsxwriter.Workbook(f"{filename}.xlsx")
-        # Iterate over each sheet in the workbook
-        for sheet_name, spreadsheet in self.sheets.items():
-            worksheet = workbook.add_worksheet(sheet_name)
-            # Iterate over each cell in the sheet
-            for i in range(1, spreadsheet.max_row() + 1):
-                for j in range(spreadsheet.max_col_index() + 1):
-                    cell_name = f"{spreadsheet.col_index_to_letter(j)}{i}"
-                    cell_value = spreadsheet.get_cell_value(cell_name)
-                    # Write the cell value to the Excel worksheet
-                    worksheet.write(i - 1, j, cell_value)
-
-        workbook.close()
 
 
 def load_and_open_workbook(filename: str) -> Workbook:
