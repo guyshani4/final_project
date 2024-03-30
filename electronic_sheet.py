@@ -644,7 +644,7 @@ class Spreadsheet:
                     if cell_name in other_cell.dependents:
                         # If the cell is a dependent of another cell, remove it
                         other_cell.remove_dependent(cell_name)
-            # Finally, remove the cell's arguments
+            # remove the cell's arguments
             cell.value = None
             cell.formula = None
 
