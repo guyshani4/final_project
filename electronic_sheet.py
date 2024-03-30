@@ -26,7 +26,7 @@ class Cell:
         self.value = value
         self.formula = formula
         # Cells that depend on this cell
-        self.dependents = set()
+        self.dependents: Set[str] = set()
 
     def add_dependent(self, cell_name: str) -> None:
         """
@@ -95,7 +95,7 @@ class Spreadsheet:
         """
         Initializes a new Spreadsheet instance with an empty dictionary of cells.
         """
-        self.cells = {}
+        self.cells: Dict[str, Cell] = {}
         self.name = sheet_name
 
     def is_valid_cell_name(self, cell_name: str) -> bool:
@@ -248,7 +248,8 @@ class Spreadsheet:
             if referenced_cell:
                 cell.value = referenced_cell.value
                 cell.formula = formula
-                cell.dependencies = [formula]
+                # Add the referenced cell to the dependents of the current cell
+                cell.add_dependent(formula)
         else:
             # If the formula is not a cell name, it might be a range of cells,
             # unless it's a SQRT formula
@@ -296,7 +297,7 @@ class Spreadsheet:
                 return
 
 
-    def get_cell(self, cell_name: str) -> Optional[Cell]:
+    def get_cell(self, cell_name: str) -> Any:
         """
         retrieves a Cell object from the cell's dictionary.
 
@@ -603,9 +604,15 @@ class Spreadsheet:
             print(f"Invalid cell name. Cell names must be in the format 'A1', 'B2', 'AZ10' etc.")
             return
         # Use regular expressions to separate the letters and digits in each cell
-        start_col, start_row = re.match(r"([A-Z]+)([0-9]+)", start).groups()
-        end_col, end_row = re.match(r"([A-Z]+)([0-9]+)", end).groups()
+        start_match = re.match(r"([A-Z]+)([0-9]+)", start)
+        end_match = re.match(r"([A-Z]+)([0-9]+)", end)
 
+        if start_match is None or end_match is None:
+            print(f"Invalid cell name. Cell names must be in the format 'A1', 'B2', 'AZ10' etc.")
+            return
+
+        start_col, start_row = start_match.groups()
+        end_col, end_row = end_match.groups()
         # Translates the col index into an integer
         start_col_index = self.col_letter_to_index(start_col)
         end_col_index = self.col_letter_to_index(end_col)

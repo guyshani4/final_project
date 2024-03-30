@@ -1,7 +1,8 @@
 from electronic_sheet import *
-import csv, json, xlsxwriter
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import letter
+import csv, json
+import xlsxwriter  # type: ignore
+from reportlab.pdfgen import canvas  # type: ignore
+from reportlab.lib.pagesizes import letter  # type: ignore
 from typing import *
 
 
@@ -17,7 +18,7 @@ class Workbook:
 
         :param name: The name of the workbook. If not provided, the workbook will be unnamed.
         """
-        self.sheets = {}
+        self.sheets: Dict[str, Spreadsheet] = {}
         self.name = name
 
     def add_sheet(self, sheet_name: str) -> None:

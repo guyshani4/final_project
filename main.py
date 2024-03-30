@@ -80,10 +80,12 @@ def get_spreadsheet() -> Tuple[Workbook, Spreadsheet]:
             while sheet_name not in workbook.list_sheets():
                 sheet_name = input("name did not found..."
                                    "which sheet would you like to open?")
-            spreadsheet = workbook.get_sheet(sheet_name)
-            print(f"You're in {sheet_name} sheet.")
-            print(spreadsheet.name + ": ")
-            print(spreadsheet)
+            temp_spreadsheet = workbook.get_sheet(sheet_name)
+            if temp_spreadsheet is not None:
+                spreadsheet = temp_spreadsheet
+                print(f"You're in {sheet_name} sheet.")
+                print(spreadsheet.name + ": ")
+                print(spreadsheet)
         except EOFError:
             pass
     else:
@@ -92,9 +94,11 @@ def get_spreadsheet() -> Tuple[Workbook, Spreadsheet]:
             workbook_name = input("what would you like to call your workbook? ")
             workbook = Workbook(workbook_name)
             sheet_name = input("type the name of the first sheet in your project? ")
-            workbook.add_sheet(sheet_name)
-            print(f"You're in {sheet_name} sheet.")
-            spreadsheet = workbook.get_sheet(sheet_name)
+            workbook.list_sheets()[0] = sheet_name
+            temp_spreadsheet = workbook.get_sheet(sheet_name)
+            if temp_spreadsheet is not None:
+                spreadsheet = temp_spreadsheet
+                print(f"You're in {sheet_name} sheet.")
         except EOFError:
             pass
     return workbook, spreadsheet
@@ -136,9 +140,17 @@ def main() -> None:
             continue
 
         if command.lower() == "save":
-            workbook.export_to_json(workbook.name)
-            print(f"Saved {workbook.name} successfully.")
-            continue
+            if workbook.name is not None:
+                workbook.export_to_json(workbook.name)
+                print(f"Saved {workbook.name} successfully.")
+            else:
+                print("Workbook name is not set. Please set a name before saving.")
+                try:
+                    workbook.name = input("what would you like to call your workbook? ")
+                    print("you can try to save again.")
+                    continue
+                except EOFError:
+                    continue
 
         if command.lower() == "export":
             print("You can save the workbook in the following formats:")
@@ -155,14 +167,41 @@ def main() -> None:
             except EOFError:
                 continue
             if save_format.lower() == "csv":
-                workbook.export_to_csv(workbook.name)
-                print(f"Saved {workbook.name}.csv successfully.")
+                if workbook.name is not None:
+                    workbook.export_to_csv(workbook.name)
+                    print(f"Saved {workbook.name}.csv successfully.")
+                else:
+                    print("Workbook name is not set. Please set a name before saving.")
+                    try:
+                        workbook.name = input("what would you like to call your workbook? ")
+                        print("you can try to export again.")
+                        continue
+                    except EOFError:
+                        continue
             elif save_format.lower() == "pdf":
-                workbook.export_to_pdf(workbook.name)
-                print(f"Saved {workbook.name}.pdf successfully.")
+                if workbook.name is not None:
+                    workbook.export_to_pdf(workbook.name)
+                    print(f"Saved {workbook.name}.pdf successfully.")
+                else:
+                    print("Workbook name is not set. Please set a name before saving.")
+                    try:
+                        workbook.name = input("what would you like to call your workbook? ")
+                        print("you can try to export again.")
+                        continue
+                    except EOFError:
+                        continue
             elif save_format.lower() == "excel":
-                workbook.export_to_excel(workbook.name)
-                print(f"Saved {workbook.name}.xlsx successfully.")
+                if workbook.name is not None:
+                    workbook.export_to_excel(workbook.name)
+                    print(f"Saved {workbook.name}.xlsx successfully.")
+                else:
+                    print("Workbook name is not set. Please set a name before saving.")
+                    try:
+                        workbook.name = input("what would you like to call your workbook? ")
+                        print("you can try to export again.")
+                        continue
+                    except EOFError:
+                        continue
             continue
 
         if command.lower().startswith("set"):
@@ -218,8 +257,10 @@ def main() -> None:
             except EOFError:
                 continue
             workbook.add_sheet(sheet_name)
-            spreadsheet = workbook.get_sheet(sheet_name)
-            print(f"You're in {sheet_name} sheet.")
+            temp_spreadsheet = workbook.get_sheet(sheet_name)
+            if temp_spreadsheet is not None:
+                spreadsheet = temp_spreadsheet
+                print(f"You're in {sheet_name} sheet.")
             continue
 
         if command.lower().startswith("sheets"):
@@ -235,10 +276,12 @@ def main() -> None:
                                        "if you want to make a different action type 'quit'")
             except EOFError:
                 continue
-            spreadsheet = workbook.get_sheet(sheet_name)
-            print(f"You're in {sheet_name} sheet.")
-            print(spreadsheet.name + ": ")
-            print(spreadsheet)
+            temp_spreadsheet = workbook.get_sheet(sheet_name)
+            if temp_spreadsheet is not None:
+                spreadsheet = temp_spreadsheet
+                print(f"You're in {sheet_name} sheet.")
+                print(spreadsheet.name + ": ")
+                print(spreadsheet)
             continue
 
         if command.lower().startswith("rename sheet"):
@@ -255,8 +298,10 @@ def main() -> None:
             except EOFError:
                 continue
             workbook.rename_sheet(sheet_name, new_name)
-            spreadsheet = workbook.get_sheet(new_name)
-            print(f"You're in {new_name} sheet.")
+            temp_spreadsheet = workbook.get_sheet(new_name)
+            if temp_spreadsheet is not None:
+                spreadsheet = temp_spreadsheet
+                print(f"You're in {new_name} sheet.")
             continue
 
         if command.lower() == "remove sheet":
@@ -273,11 +318,12 @@ def main() -> None:
             except EOFError:
                 continue
             workbook.remove_sheet(sheet_name)
-            spreadsheet = workbook.get_sheet
             if workbook.list_sheets():
                 sheet_name = workbook.list_sheets()[0]
-                spreadsheet = workbook.get_sheet(sheet_name)
-                print(f"You're in {sheet_name} sheet.")
+                temp_spreadsheet = workbook.get_sheet(sheet_name)
+                if temp_spreadsheet is not None:
+                    spreadsheet = temp_spreadsheet
+                    print(f"You're in {sheet_name} sheet.")
             else:
                 print("There are no sheets in the workbook.")
             continue
