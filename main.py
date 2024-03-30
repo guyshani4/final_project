@@ -53,7 +53,7 @@ def get_spreadsheet() -> Tuple[Workbook, Spreadsheet]:
                 if filename == "":
                     print("Please enter a valid file name.")
                     continue
-                if not filename.endswith(".json"):
+                if not filename.lower().endswith(".json"):
                     print("The file should be in json format.")
                     continue
             except EOFError:
@@ -84,7 +84,7 @@ def get_spreadsheet() -> Tuple[Workbook, Spreadsheet]:
             if temp_spreadsheet is not None:
                 spreadsheet = temp_spreadsheet
                 print(f"You're in {sheet_name} sheet.")
-                print(spreadsheet.name + ": ")
+                print(spreadsheet.name, ": ")
                 print(spreadsheet)
         except EOFError:
             pass
@@ -94,11 +94,11 @@ def get_spreadsheet() -> Tuple[Workbook, Spreadsheet]:
             workbook_name = input("what would you like to call your workbook? ")
             workbook = Workbook(workbook_name)
             sheet_name = input("type the name of the first sheet in your project? ")
-            workbook.list_sheets()[0] = sheet_name
-            temp_spreadsheet = workbook.get_sheet(sheet_name)
-            if temp_spreadsheet is not None:
-                spreadsheet = temp_spreadsheet
+            if sheet_name:
+                workbook.add_sheet(sheet_name)
+                workbook.list_sheets().append(sheet_name)
                 print(f"You're in {sheet_name} sheet.")
+            spreadsheet = workbook.get_sheet(sheet_name)
         except EOFError:
             pass
     return workbook, spreadsheet
@@ -124,10 +124,16 @@ def main() -> None:
             try:
                 if input("Are you sure you want to quit? ").lower() == "yes":
                     if input("Would you like to save the workbook? ").lower() == "yes":
-                        filename = input("what file name? ")
-                        workbook.export_to_json(filename)
-                        print("exiting workbook... Bye!")
-                        break
+                        if workbook.name is not None:
+                            workbook.export_to_json(workbook.name)
+                        else:
+                            try:
+                                filename = input("what file name? ")
+                                workbook.export_to_json(filename)
+                                print("exiting workbook... Bye!")
+                            except EOFError:
+                                print("name not given")
+                                continue
                     else:
                         print("exiting workbook... Bye!")
                         break
@@ -144,14 +150,13 @@ def main() -> None:
                 workbook.export_to_json(workbook.name)
                 print(f"Saved {workbook.name} successfully.")
             else:
-                print("Workbook name is not set. Please set a name before saving.")
                 try:
-                    workbook.name = input("what would you like to call your workbook? ")
-                    print("you can try to save again.")
-                    continue
+                    filename = input("what file name? ")
+                    workbook.export_to_json(filename)
+                    print("exiting workbook... Bye!")
                 except EOFError:
+                    print("name not given")
                     continue
-
         if command.lower() == "export":
             print("You can save the workbook in the following formats:")
             print("  - pdf")
@@ -160,10 +165,9 @@ def main() -> None:
             try:
                 save_format = input("Please enter the format you want to save the spreadsheet in: ").lower()
                 while save_format not in VALID_FILE_FORMATS:
-                    if save_format == "quit":
+                    if save_format == "":
                         break
-                    save_format = input("Invalid format. Please enter either 'csv', 'pdf', or 'json'.\n"
-                                        "if you want to make a different action, type 'quit'.").lower()
+                    save_format = input("Invalid format. Please enter either 'csv', 'pdf', or 'json'.").lower()
             except EOFError:
                 continue
             if save_format.lower() == "csv":
@@ -224,12 +228,12 @@ def main() -> None:
                 print("for more information type 'help'.")
                 continue
             if spreadsheet.cells != {}:
-                print(spreadsheet.name + ": ")
+                print(spreadsheet.name, ": ")
                 print(spreadsheet)
             continue
 
         if command.lower() == "show":
-            print(spreadsheet.name + ": ")
+            print(spreadsheet.name, ": ")
             print(spreadsheet)
             continue
 
@@ -247,7 +251,7 @@ def main() -> None:
                 print("Invalid command. Please use the format 'remove [cell]'.")
                 continue
             spreadsheet.remove_cell(cell_name)
-            print(spreadsheet.name + ": ")
+            print(spreadsheet.name, ": ")
             print(spreadsheet)
             continue
 
@@ -257,6 +261,7 @@ def main() -> None:
             except EOFError:
                 continue
             workbook.add_sheet(sheet_name)
+            workbook.list_sheets().append(sheet_name)
             temp_spreadsheet = workbook.get_sheet(sheet_name)
             if temp_spreadsheet is not None:
                 spreadsheet = temp_spreadsheet
@@ -268,19 +273,18 @@ def main() -> None:
             try:
                 sheet_name = input("which sheet would you like to open? ")
                 while sheet_name not in workbook.list_sheets():
-                    if sheet_name == "quit":
+                    if sheet_name == "":
                         break
                     workbook.print_list()
                     sheet_name = input("name did not found..."
-                                       "which sheet would you like to open?\n"
-                                       "if you want to make a different action type 'quit'")
+                                       "which sheet would you like to open? ")
             except EOFError:
                 continue
             temp_spreadsheet = workbook.get_sheet(sheet_name)
             if temp_spreadsheet is not None:
                 spreadsheet = temp_spreadsheet
                 print(f"You're in {sheet_name} sheet.")
-                print(spreadsheet.name + ": ")
+                print(spreadsheet.name, ": ")
                 print(spreadsheet)
             continue
 
@@ -289,11 +293,10 @@ def main() -> None:
             try:
                 sheet_name = input("which sheet would you like to rename? ")
                 while sheet_name not in workbook.list_sheets():
-                    if sheet_name == "quit":
+                    if sheet_name == "":
                         break
                     sheet_name = input("name did not found in the workbook..."
-                                       "which sheet would you like to rename?\n"
-                                       "if you want to make a different action type 'quit' ")
+                                       "which sheet would you like to rename? ")
                 new_name = input("which name would you like to call it? ")
             except EOFError:
                 continue
@@ -309,12 +312,11 @@ def main() -> None:
             try:
                 sheet_name = input("which sheet would you like to remove? ")
                 while sheet_name not in workbook.list_sheets():
-                    if sheet_name == "quit":
+                    if sheet_name == "":
                         break
                     workbook.print_list()
                     sheet_name = input("name did not found..."
-                                       "which sheet would you like to remove?\n"
-                                       "if you want to make a different action type 'quit' ")
+                                       "which sheet would you like to remove?\n")
             except EOFError:
                 continue
             workbook.remove_sheet(sheet_name)
@@ -339,6 +341,9 @@ def main() -> None:
                 print("Invalid command. Please use the format 'graph [type] [range1] [range2]'.")
                 continue
             spreadsheet.create_graph(graph_type, range1, range2)
+
+        if command.lower() == "details":
+            print(workbook.to_dict())
 
 
 if __name__ == "__main__":

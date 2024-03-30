@@ -681,9 +681,21 @@ class Spreadsheet:
         :return: A dictionary representation of the spreadsheet.
         """
         return {
-            cell_name: cell.to_dict() for cell_name, cell in self.cells.items()
+            cell_name: self.update_and_get_cell_dict(cell_name)
+            for cell_name in self.cells.keys()
         }
 
+    def update_and_get_cell_dict(self, cell_name: str) -> Dict[str, Any]:
+        """
+        Updates the value of a cell (if it has a formula) and returns its dictionary representation.
+
+        :param cell_name: The name of the cell to update and convert to a dictionary.
+        :return: A dictionary representation of the cell.
+        """
+        cell = self.cells[cell_name]
+        if cell.formula:
+            cell.value = cell.calculated_value(self)
+        return cell.to_dict()
 
     def create_graph(self, graph_type: str, x_range: str, y_range: str) -> None:
         """

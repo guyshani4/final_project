@@ -15,7 +15,6 @@ class Workbook:
     def __init__(self, name: Optional[str] = None) -> None:
         """
         Initializes a new workbook with an empty dictionary of sheets.
-
         :param name: The name of the workbook. If not provided, the workbook will be unnamed.
         """
         self.sheets: Dict[str, Spreadsheet] = {}
