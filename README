@@ -1,0 +1,56 @@
+# Spreadsheet Project
+This project is a Python-based implementation of a spreadsheet application, similar to Excel.
+It provides functionalities such as cell manipulation, formula calculations, graph creation,
+and exporting to various formats.
+
+some of my extensions:
+
+- workbook class:
+  The Workbook class in the project manages the collection of spreadsheets and provides methods to manipulate them
+
+  usage:
+  To use the workbook organization, you first create a Workbook instance.
+  Then, you can create Spreadsheet instances and add them to the workbook.
+  You can also remove spreadsheets from the workbook and save them to separate files.
+  Each Spreadsheet can contain multiple Cell instances,
+  which you can manipulate using the methods provided by the Spreadsheet class.
+
+- graph making:
+  the project supports creating graphs from spreadsheet data with various types.
+
+  usage:
+  To use the graph making functionality, you first need to create a Spreadsheet instance and add data to it.
+  you need to use "graph" command followed by the type of the graph and the ranges of data for the x and y axes.
+  The command format is graph [type] [range1] [range2].
+
+- exporting:
+  the project allows exporting workbooks to various formats such as JSON, CSV, PDF, and Excel
+
+  usage:
+  To use the export functionality, you need to use "export" command,
+  followed by the format you want to export to and the name of the file you want to export.
+
+- type annotations:
+  type annotations are used throughout the project to ensure type safety and improve code readability
+
+- testing the project:
+  a testing file is included to verify the functionality and correctness of the code.
+
+
+in details:
+
+- Workbook Organization:
+The project is organized into a hierarchy of classes: Workbook, Spreadsheet, and Cell.
+The Workbook class is the top-level class that represents the entire workbook.
+It contains multiple spreadsheets, allowing for organization and separation of data into different sheets.
+This class is crucial as it manages the collection of spreadsheets and provides methods to manipulate them
+and save them separately.
+
+- Graph Making:
+The graph making functionality in the project is a part of the Spreadsheet class.
+It allows users to create 'bar' and 'pie' types of graphs from the data in their spreadsheets.
+To create a graph, users need to use the create_graph method of the Spreadsheet class.
+This method takes three arguments: the type of the graph, and the ranges of data for the x and y axes.
+The implementation of this feature involves the use of data visualization library "matplotlib".
+this library provides a wide range of functionalities for creating graphs in Python,
+making it ideal for implementing the graph making feature in this project.
