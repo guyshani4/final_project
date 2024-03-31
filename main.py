@@ -350,7 +350,6 @@ if __name__ == "__main__":
     try:
         if sys.argv[1] == "--help":
             print(HELP_TEXT)
-            main()
     except IndexError:
-        pass
-    main()
+        main()
+
