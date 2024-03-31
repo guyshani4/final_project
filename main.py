@@ -25,6 +25,14 @@ HELP_TEXT = """
                     the first range needs to include one columns that represent the topics of the graph.
                     the second range needs to include one column that represent the values of the topics.
             """
+HELP_COMMAND = """
+                If you choose to open an existing workbook, 
+                you will need to provide the filename of the workbook IN A 'json' format.
+                If you choose to create a new one, 
+                you will be asked to provide a name for the workbook and the first sheet.
+                Once the workbook is open, you can interact with it by entering various commands:
+                """
+
 VALID_FILE_FORMATS = ["csv", "pdf", "excel"]
 
 
@@ -349,6 +357,7 @@ def main() -> None:
 if __name__ == "__main__":
     try:
         if sys.argv[1] == "--help":
+            print(HELP_COMMAND)
             print(HELP_TEXT)
     except IndexError:
         main()
