@@ -180,6 +180,10 @@ class Workbook:
                 x_position = x_offset + j * column_spacing
                 c.drawString(x_position, height - y_offset + row_spacing, col_header)
 
+            # Draw the subject line with the spreadsheet name
+            c.setFont("Helvetica-Bold", 20)
+            c.drawString(x_offset, height - y_offset + 2 * row_spacing, sheet_name)
+
             # Reset font for table content
             c.setFont("Helvetica", 10)
 
