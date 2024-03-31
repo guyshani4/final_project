@@ -11,7 +11,7 @@ GRAPH_ERROR = "Invalid range. Please use the format 'graph [type] [range1] [rang
               "Supported graph types: 'bar', 'pie'\n" \
               "the first range should be the x-axis - represent topics\n" \
               "the second range should be the y-axis - represent values.\n" \
-              "the column letter in the start/end range should be the same."
+              "the start/end range of both axis should be lengths equal."
 
 
 class Cell:
@@ -728,6 +728,6 @@ class Spreadsheet:
             plt.show()
 
         except Exception as e:
-            print(f"An error occurred while creating the graph: {str(e)}")
+            print(f"You haven't inserted the graph details correctly: {str(e)}")
             print(GRAPH_ERROR)
             return

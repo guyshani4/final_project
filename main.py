@@ -17,7 +17,7 @@ HELP_TEXT = """
                   - new - opens a new sheet in your workbook
                   - sheets - if you want to see the sheet's list and choose which sheet to open
                   - rename sheet - if you want to rename a sheet
-                  - remove sheet - if you want to removes a sheet
+                  - 'remove sheet' - if you want to removes a sheet
                   - save - if you want to save the workbook
                   - export - if you want to export the workbook to a different file type
                   - graph [type] [range1] [range2] - if you want to create a graph. 
@@ -237,7 +237,7 @@ def main() -> None:
             print(spreadsheet)
             continue
 
-        if command.lower().startswith("remove"):
+        if command.lower().startswith("remove sheet"):
             command_parts = command.split()
             if len(command_parts) != 2:
                 print("Invalid command. Please use the format 'remove [cell]'.")
