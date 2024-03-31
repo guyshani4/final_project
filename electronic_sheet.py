@@ -727,7 +727,6 @@ class Spreadsheet:
             # Display the graph and wait for it to be closed before continuing
             plt.show()
 
-        except Exception as e:
-            print(f"You haven't inserted the graph details correctly: {str(e)}")
+        except:
             print(GRAPH_ERROR)
             return
