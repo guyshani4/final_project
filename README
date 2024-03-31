@@ -1,43 +1,50 @@
+
+
+
+
+
 # Spreadsheet Project
 This project is a Python-based implementation of a spreadsheet application, similar to Excel.
 It provides functionalities such as cell manipulation, formula calculations, graph creation,
 and exporting to various formats.
 
-some of my extensions:
+My Extensions:
 
-- workbook class:
+1. workbook class:
   The Workbook class in the project manages the collection of spreadsheets and provides methods to manipulate them
 
   usage:
   To use the workbook organization, you first create a Workbook instance.
-  Then, you can create Spreadsheet instances and add them to the workbook.
+  After choosing the workbook name, you can create Spreadsheet instances and add them to the workbook.
+  The main command will lead you easily through the workbook formation and with the command "sheets" 
+  you will be able to switch between the sheets. With "new" command you will be able to add sheet to you workbook.
   You can also remove spreadsheets from the workbook and save them to separate files.
   Each Spreadsheet can contain multiple Cell instances,
   which you can manipulate using the methods provided by the Spreadsheet class.
 
-- graph making:
-  the project supports creating graphs from spreadsheet data with various types.
+2. graph making:
+  the project supports creating "pie" and "bar" graphs from spreadsheet data with various types.
 
   usage:
   To use the graph making functionality, you first need to create a Spreadsheet instance and add data to it.
   you need to use "graph" command followed by the type of the graph and the ranges of data for the x and y axes.
-  The command format is graph [type] [range1] [range2].
+  The command format is graph [type] [range_x] [range_y].
 
-- exporting:
+3. exporting:
   the project allows exporting workbooks to various formats such as JSON, CSV, PDF, and Excel
 
   usage:
-  To use the export functionality, you need to use "export" command,
-  followed by the format you want to export to and the name of the file you want to export.
+  To use the export functionality, you need to use "export" command.
+  Then you will choose the format you want to export to and the name of the file to export.
 
-- type annotations:
+4. type annotations:
   type annotations are used throughout the project to ensure type safety and improve code readability
 
-- testing the project:
-  a testing file is included to verify the functionality and correctness of the code.
+5. testing the project:
+  A testing file is included to verify the functionality and correctness of the code.
 
 
-in details:
+In Details:
 
 - Workbook Organization:
 The project is organized into a hierarchy of classes: Workbook, Spreadsheet, and Cell.
@@ -54,3 +61,27 @@ This method takes three arguments: the type of the graph, and the ranges of data
 The implementation of this feature involves the use of data visualization library "matplotlib".
 this library provides a wide range of functionalities for creating graphs in Python,
 making it ideal for implementing the graph making feature in this project.
+
+- Exporting:
+
+JSON: This is the default format used when saving the workbook with the command "save". 
+      The export_to_json method of the Workbook class is used to save the workbook in JSON format. 
+      This method takes the name of the workbook as an argument and saves the workbook in a JSON file with that name.
+
+The user is prompted to enter the format they want to save the spreadsheet in. 
+If the user enters a valid format (either "csv", "pdf", or "excel"), the corresponding method is called to save the workbook in that format. 
+If the workbook name is not set, the user is asked to provide a name before saving.  
+
+CSV: This method exports the workbook to a CSV file. 
+     Each sheet in the workbook is saved to a separate CSV file. 
+     For each sheet, it iterates over the rows and for each row, it creates a list of cell values. 
+     These values are then written to the CSV file using the csv.writer object.
+ 
+PDF: This method exports the workbook to a PDF file. 
+     Each sheet is saved to a separate PDF file. I used the "reportlab" library to create a PDF file. 
+     For each cell in the sheet, it writes the cell value to the PDF file and draws a custom grid line around the cell.  
+
+Excel: This method exports the workbook to an Excel file. 
+       Each sheet is saved to a separate tab in the Excel file. I used the "xlsxwriter" library to create an Excel workbook. 
+       For each cell in the sheet, it writes the cell value to the Excel worksheet.
+

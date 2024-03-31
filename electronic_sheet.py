@@ -1,21 +1,24 @@
 import re
 import math
 from typing import *
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt  # type: ignore
 
 LETTERS_NUM = 26
 ALL_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 ALL_DIGITS = "0123456789"
-GRAPH_ERROR = "Invalid range. Please use the format 'graph [type] [range1] [range2]'.\n"\
-              "For example: 'graph line A1:A10 B1:B10'\n"\
-              "Supported graph types: 'bar', 'pie'\n"\
-              "the first range should be the x-axis - represent topics\n"\
-              "the second range should be the y-axis - represent values.\n"\
+GRAPH_ERROR = "Invalid range. Please use the format 'graph [type] [range1] [range2]'.\n" \
+              "For example: 'graph line A1:A10 B1:B10'\n" \
+              "Supported graph types: 'bar', 'pie'\n" \
+              "the first range should be the x-axis - represent topics\n" \
+              "the second range should be the y-axis - represent values.\n" \
               "the column letter in the start/end range should be the same."
+
+
 class Cell:
     """
     Represents a single cell in a Spreadsheet.
     """
+
     def __init__(self, value: Optional[Any] = None, formula: Optional[str] = None) -> None:
         """
         Initializes a new Cell instance.
@@ -91,6 +94,7 @@ class Spreadsheet:
     """
     Represents a spreadsheet page, similar to an Excel page.
     """
+
     def __init__(self, sheet_name=None) -> None:
         """
         Initializes a new Spreadsheet instance with an empty dictionary of cells.
@@ -128,7 +132,6 @@ class Spreadsheet:
             return True
 
         return False
-
 
     def __str__(self) -> Any:
         """
@@ -277,7 +280,7 @@ class Spreadsheet:
                 # If the formula is not a range of cells, it might be a single cell
                 for index, sign in enumerate(formula):
                     if sign in ['*', '/', '+', '-']:
-                        parts = [formula[:index], sign, formula[index+1]]
+                        parts = [formula[:index], sign, formula[index + 1]]
                         if self.is_valid_cell_name(parts[0]):
                             dependencies.append(parts[0])
                         if self.is_valid_cell_name(parts[2]):
@@ -296,7 +299,6 @@ class Spreadsheet:
             if cell.value is None:
                 return
 
-
     def get_cell(self, cell_name: str) -> Any:
         """
         retrieves a Cell object from the cell's dictionary.
@@ -310,7 +312,6 @@ class Spreadsheet:
             return self.cells[cell_name]
         return
 
-
     def get_cell_value(self, cell_name: str) -> Any:
         """
         Retrieves the value of a cell in the spreadsheet.
@@ -320,7 +321,7 @@ class Spreadsheet:
         :return: The value of the cell, or an error message if the cell does not exist.
         """
         if not self.is_valid_cell_name(cell_name):
-            print(f"Invalid cell name '{cell_name}'." 
+            print(f"Invalid cell name '{cell_name}'."
                   f" Cell names must be in the format 'A1', 'B2', 'AZ10' etc.")
             return
         cell = self.get_cell(cell_name)
@@ -353,7 +354,7 @@ class Spreadsheet:
         parts = []
         for index, sign in enumerate(formula):
             if sign in ['*', '/', '+', '-']:
-                parts = [formula[:index], sign, formula[index+1:]]
+                parts = [formula[:index], sign, formula[index + 1:]]
         if len(parts) == 3:
             side1, operation, side2 = parts
             # Try converting the first operand to a number, if it fails, treat it as a cell reference
@@ -369,7 +370,6 @@ class Spreadsheet:
             except ValueError:
                 value2 = self.get_cell_value(side2)
                 if not isinstance(value2, int) and not isinstance(value2, float):
-
                     return
             if value2 is None or value1 is None:
                 return
@@ -392,7 +392,6 @@ class Spreadsheet:
         else:
             print("Invalid formula format.")
             return
-
 
     def evaluate_formula(self, formula: str) -> Any:
         """
@@ -458,8 +457,6 @@ class Spreadsheet:
         # treat it as a regular formula
         return self.regular_formula(formula)
 
-
-
     def cells_values_list(self, start: str, end: str) -> Any:
         """
         Retrieves a list with all the values in a given range
@@ -489,7 +486,6 @@ class Spreadsheet:
         if cell_names:
             return min(cell_names)
         return
-
 
     def find_max(self, start: str, end: str) -> Any:
         """
@@ -533,7 +529,7 @@ class Spreadsheet:
         for index in range(len(formula)):
             if formula[index] == "(":
                 # Remove the operation and the opening parenthesis from the formula
-                formula = formula[index+1:]
+                formula = formula[index + 1:]
                 break
         # Remove the closing parenthesis from the formula
         formula = formula.replace(")", "")
@@ -557,11 +553,10 @@ class Spreadsheet:
         values_list = self.cells_values_list(start, end)
         if values_list:
             try:
-                return sum(values_list)/len(values_list)
+                return sum(values_list) / len(values_list)
             except Exception as err:
                 print(f"Error: {str(err)}")
         return
-
 
     def col_letter_to_index(self, col: str) -> int:
         """
@@ -575,7 +570,6 @@ class Spreadsheet:
         for char in col:
             index = index * LETTERS_NUM + (ord(char.upper()) - ord('A') + 1)
         return index - 1
-
 
     def col_index_to_letter(self, index: int) -> str:
         """
@@ -648,7 +642,6 @@ class Spreadsheet:
             cell.value = None
             cell.formula = None
 
-
     def max_row(self) -> int:
         """
         Retrieves the maximum row index that has been used in the spreadsheet.
@@ -660,7 +653,6 @@ class Spreadsheet:
             return 0
         rows = [int(cell.lstrip(ALL_LETTERS)) for cell in self.cells.keys()]
         return max(rows)
-
 
     def max_col_index(self) -> int:
         """
@@ -739,6 +731,3 @@ class Spreadsheet:
             print(f"An error occurred while creating the graph: {str(e)}")
             print(GRAPH_ERROR)
             return
-
-
-
